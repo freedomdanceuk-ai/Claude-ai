@@ -15,7 +15,17 @@ Each clip gets:
 - **Hook text.** It appears on screen for the first 3 seconds.
 - **A `clips.json` manifest.** It lists each clip's title, hook, virality score and reason, which helps with writing captions and tracking performance.
 
-## Setup
+## Run it in the cloud (works from a phone)
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/freedomdanceuk-ai/Claude-ai/blob/ccr-f8f1b6dc-utsp0q/clipper/Clipper.ipynb)
+
+Open the link, sign in with Google, and choose **Runtime → Change runtime type → T4 GPU**.
+Then tap ▶ on each step in order: upload a video (or pick one from Google Drive or a URL),
+make the clips, preview them, and download a zip. It's free and needs no installation.
+
+## Run it locally
+
+### Setup
 
 Requires Python 3.10+ and [ffmpeg](https://ffmpeg.org/download.html).
 
@@ -26,7 +36,7 @@ export ANTHROPIC_API_KEY=sk-ant-...   # optional, but much better clip selection
 
 Without an API key the tool uses an offline heuristic. The heuristic favours dense, punchy speech and complete sentences.
 
-## Usage
+### Usage
 
 Run from the repository root:
 
