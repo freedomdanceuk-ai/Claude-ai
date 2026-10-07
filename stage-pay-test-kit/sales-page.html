@@ -1,0 +1,405 @@
+<title>Stage-Pay</title>
+<meta name="description" content="Build your house in Zimbabwe from abroad without losing money. A stage-by-stage payment tracker: no proof, no payment.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a site file. Hero states the rule, a live-looking tracker sits beside it like a clipboard on a slab; sections below read top to bottom on a single column at phone width. */
+:root {
+  --bg: #F3F2EE;          /* concrete, swept */
+  --surface: #FFFFFF;
+  --ink: #1D2321;
+  --muted: #5B6360;
+  --line: #D9D8D1;
+  --brick: #B4492B;       /* common brick */
+  --brick-ink: #FFFFFF;
+  --brick-soft: #F6E3DC;
+  --ok: #2F6B4F;          /* approval stamp green */
+  --ok-soft: #E1EEE6;
+  --wait: #9A6A0B;
+  --wait-soft: #F7ECD2;
+  --lock: #7B8380;
+  --chat: #DCF2D5;
+  --chat-in: #FFFFFF;
+  --chat-bg: #E9E4DA;
+  --display: "Bricolage Grotesque", "Arial Narrow", system-ui, sans-serif;
+  --body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161A19; --surface: #1F2523; --ink: #ECEDEA; --muted: #A3ABA7; --line: #333B38;
+    --brick: #E0704F; --brick-ink: #1A0E09; --brick-soft: #3A2219;
+    --ok: #74C49A; --ok-soft: #1C3328; --wait: #E3B356; --wait-soft: #3A2E14; --lock: #87908C;
+    --chat: #1F4630; --chat-in: #262D2B; --chat-bg: #121615;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #161A19; --surface: #1F2523; --ink: #ECEDEA; --muted: #A3ABA7; --line: #333B38;
+  --brick: #E0704F; --brick-ink: #1A0E09; --brick-soft: #3A2219;
+  --ok: #74C49A; --ok-soft: #1C3328; --wait: #E3B356; --wait-soft: #3A2E14; --lock: #87908C;
+  --chat: #1F4630; --chat-in: #262D2B; --chat-bg: #121615;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.6; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 20px; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.08; text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: clamp(2.5rem, 6.5vw, 4.4rem); font-weight: 800; }
+h2 { font-size: clamp(1.7rem, 3.6vw, 2.4rem); font-weight: 700; }
+h3 { font-size: 1.15rem; font-weight: 700; }
+p { margin: 0; max-width: 62ch; }
+.eyebrow { font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brick); }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--brick); outline-offset: 3px; border-radius: 4px; }
+
+/* top bar */
+.bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-block: 18px; }
+.logo { font-family: var(--display); font-weight: 800; font-size: 1.25rem; display: flex; align-items: center; gap: 10px; }
+.logo-mark { width: 26px; height: 26px; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; gap: 2px; }
+.logo-mark span { background: var(--brick); border-radius: 1px; }
+.logo-mark span:nth-child(n+5) { background: var(--line); }
+.bar-cta { font-weight: 600; font-size: 0.92rem; text-decoration: none; border-bottom: 2px solid var(--brick); padding-bottom: 2px; }
+
+/* hero */
+.hero { display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center; padding-block: 28px 64px; }
+.hero > * { min-width: 0; }
+.hero-copy { display: flex; flex-direction: column; gap: 22px; }
+.hero h1 .rule { color: var(--brick); display: block; }
+.lede { font-size: 1.15rem; color: var(--muted); }
+.ctas { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.btn { display: inline-flex; align-items: center; gap: 8px; font: 600 1rem var(--body); padding: 14px 22px; border-radius: 8px; text-decoration: none; border: 2px solid var(--brick); cursor: pointer; }
+.btn-primary { background: var(--brick); color: var(--brick-ink); }
+.btn-primary:hover { filter: brightness(1.07); }
+.btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn-ghost:hover { border-color: var(--ink); }
+.fine { font-size: 0.86rem; color: var(--muted); }
+
+/* tracker mockup */
+.tracker { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 18px 40px -22px rgba(29,35,33,.35); overflow: hidden; }
+.tr-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 16px 18px 12px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.tr-title { font-family: var(--display); font-weight: 700; font-size: 1.05rem; }
+.tr-sub { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); }
+.money { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--line); border-bottom: 1px solid var(--line); }
+.money div { background: var(--surface); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.money .k { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.money .v { font-family: var(--mono); font-weight: 500; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.money .gap .v { color: var(--brick); }
+.meter { padding: 12px 18px 4px; display: flex; flex-direction: column; gap: 6px; }
+.meter-track { position: relative; height: 10px; background: var(--brick-soft); border-radius: 5px; overflow: hidden; }
+.meter-fill { position: absolute; inset: 0 auto 0 0; width: 82%; background: var(--ok); border-radius: 5px 0 0 5px; }
+.meter-legend { display: flex; justify-content: space-between; font-size: 0.74rem; color: var(--muted); font-family: var(--mono); gap: 8px; flex-wrap: wrap; }
+.stages { list-style: none; margin: 0; padding: 8px 0 6px; }
+.stage { display: grid; grid-template-columns: 22px 1fr auto; gap: 12px; align-items: center; padding: 10px 18px; }
+.stage + .stage { border-top: 1px dashed var(--line); }
+.dot { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 0.75rem; font-weight: 700; }
+.s-ok .dot { background: var(--ok); color: var(--surface); }
+.s-wait .dot { background: var(--wait); color: var(--surface); }
+.s-lock .dot { background: transparent; border: 2px solid var(--lock); color: var(--lock); }
+.st-name { font-weight: 600; font-size: 0.95rem; line-height: 1.3; }
+.st-meta { display: block; font-size: 0.78rem; color: var(--muted); font-weight: 400; font-family: var(--mono); }
+.pill { font-family: var(--mono); font-size: 0.7rem; padding: 4px 9px; border-radius: 999px; white-space: nowrap; font-weight: 500; }
+.s-ok .pill { background: var(--ok-soft); color: var(--ok); }
+.s-wait .pill { background: var(--wait-soft); color: var(--wait); }
+.s-lock .pill { background: transparent; color: var(--lock); border: 1px solid var(--line); }
+.s-lock .st-name { color: var(--muted); }
+.tr-foot { padding: 10px 18px 14px; font-size: 0.74rem; color: var(--muted); font-family: var(--mono); border-top: 1px solid var(--line); }
+
+/* sections */
+section { padding-block: 64px; border-top: 1px solid var(--line); }
+.sec-head { display: flex; flex-direction: column; gap: 12px; margin-bottom: 36px; }
+.problem-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+.problem-grid > div { display: flex; flex-direction: column; gap: 8px; }
+.problem-grid .fig { font-family: var(--mono); color: var(--brick); font-size: 0.85rem; }
+.problem-grid p { color: var(--muted); }
+
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; counter-reset: s; }
+.step { padding: 0 24px 0 0; display: flex; flex-direction: column; gap: 10px; position: relative; }
+.step-n { font-family: var(--display); font-weight: 800; font-size: 2.6rem; color: var(--brick); line-height: 1; }
+.step p { color: var(--muted); }
+.step + .step { padding-left: 24px; border-left: 1px solid var(--line); }
+
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+.split > * { min-width: 0; }
+.kit { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; }
+.kit li { display: grid; grid-template-columns: 28px 1fr; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.kit li:first-child { border-top: 1px solid var(--line); }
+.kit .ic { font-family: var(--mono); color: var(--brick); font-weight: 500; }
+.kit b { display: block; font-weight: 600; }
+.kit span.d { color: var(--muted); font-size: 0.95rem; }
+
+/* whatsapp mock */
+.phone { background: var(--chat-bg); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--line); }
+.phone-top { font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--brick); color: var(--brick-ink); display: grid; place-items: center; font-size: 0.8rem; font-weight: 700; }
+.msg { max-width: 88%; padding: 9px 12px; border-radius: 10px; font-size: 0.92rem; line-height: 1.45; }
+.msg.out { align-self: flex-end; background: var(--chat); border-top-right-radius: 2px; }
+.msg.in { align-self: flex-start; background: var(--chat-in); border-top-left-radius: 2px; }
+.msg .t { display: block; text-align: right; font-size: 0.68rem; color: var(--muted); margin-top: 3px; font-family: var(--mono); }
+.msg ol { margin: 6px 0 0; padding-left: 18px; }
+.photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-bottom: 4px; }
+.photos i { aspect-ratio: 1; border-radius: 6px; background:
+  repeating-linear-gradient(0deg, var(--brick) 0 7px, var(--brick-soft) 7px 9px); opacity: .85; display: block; }
+.photos i:nth-child(2) { background: repeating-linear-gradient(90deg, var(--lock) 0 2px, var(--line) 2px 12px); }
+.photos i:nth-child(3) { background: linear-gradient(var(--line) 55%, var(--brick) 55%); }
+
+.fit { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.fit > div { display: flex; flex-direction: column; gap: 12px; }
+.fit ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+.fit .no { color: var(--muted); }
+
+/* offer */
+.offer { background: var(--surface); border: 2px solid var(--ink); border-radius: 16px; padding: 32px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 32px; align-items: center; }
+.offer > * { min-width: 0; }
+.price { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.price .now { font-family: var(--display); font-weight: 800; font-size: 3.4rem; line-height: 1; }
+.price .was { font-family: var(--mono); color: var(--muted); text-decoration: line-through; }
+.offer-list { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+.offer-side { display: flex; flex-direction: column; gap: 14px; }
+.copybox { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-family: var(--mono); background: var(--bg); border: 1px dashed var(--line); padding: 10px 12px; border-radius: 8px; }
+.copybox code { user-select: all; font-size: 0.95rem; }
+.copybox button { font: 500 0.8rem var(--mono); background: transparent; border: 1px solid var(--line); color: var(--ink); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+
+.faq { display: flex; flex-direction: column; }
+.faq details { border-bottom: 1px solid var(--line); padding: 16px 0; }
+.faq summary { font-weight: 600; cursor: pointer; font-size: 1.05rem; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+.faq summary::after { content: "+"; font-family: var(--mono); color: var(--brick); font-size: 1.2rem; }
+.faq details[open] summary::after { content: "–"; }
+.faq details p { color: var(--muted); margin-top: 10px; }
+
+footer { padding-block: 40px 56px; border-top: 1px solid var(--line); font-size: 0.85rem; color: var(--muted); display: flex; flex-direction: column; gap: 8px; }
+
+@media (max-width: 860px) {
+  .hero, .split, .offer { grid-template-columns: 1fr; gap: 32px; }
+  .problem-grid, .steps, .fit { grid-template-columns: 1fr; gap: 24px; }
+  .step, .step + .step { padding: 0; border-left: 0; }
+  .step + .step { padding-top: 24px; border-top: 1px solid var(--line); }
+  section { padding-block: 48px; }
+  .offer { padding: 22px; }
+}
+@media (max-width: 420px) {
+  .money .v { font-size: 1rem; }
+  .stage { padding: 10px 14px; gap: 10px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .meter-fill { animation: grow 1.1s ease-out both; }
+  @keyframes grow { from { width: 30%; } to { width: 82%; } }
+}
+</style>
+
+<div class="wrap">
+  <header class="bar">
+    <div class="logo"><span class="logo-mark" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></span>Stage-Pay</div>
+    <a class="bar-cta" href="#preorder">Founding price: $15</a>
+  </header>
+
+  <div class="hero">
+    <div class="hero-copy">
+      <div class="eyebrow">For Zimbabweans building at home from abroad</div>
+      <h1>Build at home from abroad. <span class="rule">No proof, no payment.</span></h1>
+      <p class="lede">Stage-Pay is a simple tracker that shows what you've sent and what's actually built, stage by stage. Your builder sends proof on WhatsApp before you release the next payment. Nobody needs a new app.</p>
+      <div class="ctas">
+        <a class="btn btn-primary" id="cta-hero" href="#preorder">Pre-order for $15</a>
+        <a class="btn btn-ghost" href="#how">See how it works</a>
+      </div>
+      <p class="fine">Founding price for the first 50 buyers. Full refund if it isn't delivered on time.</p>
+    </div>
+
+    <figure class="tracker" id="tracker" aria-label="Example of the Stage-Pay tracker" style="margin:0">
+      <div class="tr-head">
+        <span class="tr-title">4-room house · Chitungwiza</span>
+        <span class="tr-sub">EXAMPLE PROJECT</span>
+      </div>
+      <div class="money">
+        <div><span class="k">Sent</span><span class="v">$14,200</span></div>
+        <div><span class="k">Verified built</span><span class="v">$11,600</span></div>
+        <div class="gap"><span class="k">Unproven</span><span class="v">$2,600</span></div>
+      </div>
+      <div class="meter" aria-hidden="true">
+        <div class="meter-track"><div class="meter-fill"></div></div>
+        <div class="meter-legend"><span>82% of money sent is backed by proof</span><span>Gap flagged</span></div>
+      </div>
+      <ol class="stages">
+        <li class="stage s-ok"><span class="dot">✓</span><span class="st-name">Foundation &amp; footings<span class="st-meta">6 photos · 1 video · receipts</span></span><span class="pill">Paid</span></li>
+        <li class="stage s-ok"><span class="dot">✓</span><span class="st-name">Slab level<span class="st-meta">DPC visible · cement receipts</span></span><span class="pill">Paid</span></li>
+        <li class="stage s-wait"><span class="dot">!</span><span class="st-name">Window level<span class="st-meta">Proof 2 of 4 received</span></span><span class="pill">Hold payment</span></li>
+        <li class="stage s-lock"><span class="dot">4</span><span class="st-name">Roof level (wall plate)<span class="st-meta">Unlocks after window level</span></span><span class="pill">Locked</span></li>
+        <li class="stage s-lock"><span class="dot">5</span><span class="st-name">Roofing<span class="st-meta">Timber, trusses, sheets</span></span><span class="pill">Locked</span></li>
+      </ol>
+      <figcaption class="tr-foot">Illustration with example figures. Your tracker uses your own project and amounts.</figcaption>
+    </figure>
+  </div>
+</div>
+
+<div class="wrap">
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">The problem</div>
+      <h2>You send the money. You get a photo. You hope.</h2>
+    </div>
+    <div class="problem-grid">
+      <div>
+        <span class="fig">01 · Money without a trail</span>
+        <h3>Transfers go out. Nobody tracks what they bought.</h3>
+        <p>After a year of sending money, most people can't say how much went into the walls and how much disappeared along the way.</p>
+      </div>
+      <div>
+        <span class="fig">02 · Proof that proves nothing</span>
+        <h3>One blurry photo looks the same every week.</h3>
+        <p>Without asking for specific angles, dates and receipts, you can't tell real progress from an old picture.</p>
+      </div>
+      <div>
+        <span class="fig">03 · Family makes it harder</span>
+        <h3>Asking for proof feels like accusing someone.</h3>
+        <p>When a brother, an uncle or a family friend is running the site, a fair rule set in advance keeps the relationship safe.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="sec-head">
+      <div class="eyebrow">How it works</div>
+      <h2>Three steps, repeated at every stage of the build.</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <span class="step-n">1</span>
+        <h3>Set the stage and the price</h3>
+        <p>Enter your agreed amount for each stage, from foundation to roofing. The tracker shows what each stage should include.</p>
+      </div>
+      <div class="step">
+        <span class="step-n">2</span>
+        <h3>Request proof on WhatsApp</h3>
+        <p>Copy a ready-made message asking for the exact photos, video and receipts for that stage. It's polite, clear and the same every time.</p>
+      </div>
+      <div class="step">
+        <span class="step-n">3</span>
+        <h3>Release the money, or hold it</h3>
+        <p>Tick off the proof as it arrives. The next payment unlocks only when the checklist is complete, and the dashboard flags any unexplained gap.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="split">
+      <div>
+        <div class="sec-head">
+          <div class="eyebrow">What's in the kit</div>
+          <h2>Everything you need to manage the build from your phone.</h2>
+        </div>
+        <ul class="kit">
+          <li><span class="ic">▦</span><div><b>Stage-Pay tracker</b><span class="d">Google Sheets and Excel. Sent vs built dashboard, payment gates and a photo log for every stage.</span></div></li>
+          <li><span class="ic">✓</span><div><b>Proof checklists for each stage</b><span class="d">What to ask for at foundation, slab, window level, wall plate, roofing and finishing.</span></div></li>
+          <li><span class="ic">✉</span><div><b>WhatsApp message scripts</b><span class="d">Copy-paste requests for builders and family that are firm without being rude.</span></div></li>
+          <li><span class="ic">⚑</span><div><b>Red-flag guide</b><span class="d">Warning signs about stands, contractors and payment requests to check before you send anything.</span></div></li>
+          <li><span class="ic">✎</span><div><b>Before-you-build checklist</b><span class="d">Stand ownership, council plan approval, written agreement and payment schedule.</span></div></li>
+        </ul>
+      </div>
+      <div class="phone" aria-label="Example WhatsApp proof request">
+        <div class="phone-top"><span class="avatar">TM</span>Tendai (builder)</div>
+        <div class="msg out">Hi Tendai, hope the team is well. Before I send the window-level payment, please share:
+          <ol><li>Photo of each wall from outside</li><li>Short video walking round inside</li><li>Lintels in place</li><li>Receipts for bricks and cement</li></ol>
+          Thank you!<span class="t">09:14 ✓✓</span></div>
+        <div class="msg in"><div class="photos" aria-hidden="true"><i></i><i></i><i></i></div>Here are the walls and the receipts. Video coming tonight.<span class="t">11:02</span></div>
+        <div class="msg out">Received, thank you. I'll release the payment once the video is in.<span class="t">11:05 ✓✓</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Is it for you?</div>
+      <h2>Made for people paying for a build they can't visit.</h2>
+    </div>
+    <div class="fit">
+      <div>
+        <h3>A good fit if you</h3>
+        <ul>
+          <li>live in the UK, South Africa, the US, Australia or anywhere else abroad</li>
+          <li>are building, or planning to build, a house in Zimbabwe</li>
+          <li>send money to a builder or a relative who manages the site</li>
+          <li>want a clear record without paying for a full-time project manager</li>
+        </ul>
+      </div>
+      <div class="no">
+        <h3>Not what you need if you</h3>
+        <ul>
+          <li>want someone on the ground to inspect the site for you</li>
+          <li>are buying a finished house from a developer</li>
+          <li>need legal or structural engineering advice</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="preorder">
+    <div class="offer">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="eyebrow">Founding pre-order</div>
+        <h2>Get Stage-Pay at the founding price.</h2>
+        <div class="price"><span class="now">$15</span><span class="was">$29 at launch</span></div>
+        <ul class="offer-list">
+          <li>The full Stage-Pay kit, delivered by email</li>
+          <li>Free updates, including refreshed stage checklists</li>
+          <li>Your say on what goes into version 1</li>
+          <li>Full refund if it isn't delivered within 4 weeks</li>
+        </ul>
+      </div>
+      <div class="offer-side">
+        <a class="btn btn-primary" id="cta-buy" href="#preorder">Pre-order for $15</a>
+        <p class="fine">Prefer to ask first? Message us on WhatsApp:</p>
+        <div class="copybox"><code id="wa">+00 000 000 0000</code><button type="button" id="copy-wa">Copy</button></div>
+        <p class="fine">Just want updates? Send the word <b>STAGE</b> to the number above and we'll tell you when it launches.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Questions</div>
+      <h2>Before you pre-order</h2>
+    </div>
+    <div class="faq">
+      <details><summary>Does my builder need to install anything?</summary><p>No. Your builder keeps using WhatsApp. You do the tracking in the spreadsheet on your phone or laptop.</p></details>
+      <details><summary>Is this a construction or inspection company?</summary><p>No. Stage-Pay is a tool and a set of checklists you use yourself. For a large project, we also explain when it's worth paying an independent inspector, and what to ask them.</p></details>
+      <details><summary>I've already started building. Is it too late?</summary><p>No. Enter what you've sent so far and start using the proof checklists from your current stage.</p></details>
+      <details><summary>What do I need to use it?</summary><p>A free Google account for Google Sheets, or Microsoft Excel. It works on a phone, but it's easier to set up on a laptop.</p></details>
+      <details><summary>When will I get it?</summary><p>Within 4 weeks of your pre-order. If it isn't delivered by then, you get a full refund.</p></details>
+    </div>
+  </section>
+</div>
+
+<div class="wrap">
+  <footer>
+    <span><b>Stage-Pay</b> · A payment tracker for building in Zimbabwe from abroad.</span>
+    <span>Stage-Pay is a record-keeping tool. It isn't legal, financial or engineering advice, and it doesn't guarantee how any builder will behave.</span>
+  </footer>
+</div>
+
+<script>
+  // Settings: put your real links here before sharing the page.
+  const PREORDER_URL = "";            // e.g. your Selar or Gumroad product link
+  const WHATSAPP_NUMBER = "+00 000 000 0000";
+
+  document.getElementById("wa").textContent = WHATSAPP_NUMBER;
+  if (PREORDER_URL) {
+    for (const id of ["cta-hero", "cta-buy"]) {
+      const a = document.getElementById(id);
+      a.href = PREORDER_URL; a.target = "_blank"; a.rel = "noopener";
+    }
+  }
+  document.getElementById("copy-wa").addEventListener("click", (e) => {
+    const btn = e.currentTarget;
+    const code = document.getElementById("wa");
+    const done = () => { btn.textContent = "Copied"; setTimeout(() => (btn.textContent = "Copy"), 1800); };
+    try {
+      navigator.clipboard.writeText(code.textContent).then(done, () => selectText(code));
+    } catch (_) { selectText(code); }
+  });
+  function selectText(el) {
+    const r = document.createRange(); r.selectNodeContents(el);
+    const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+  }
+</script>
