@@ -1,0 +1,358 @@
+<title>Stage-Pay Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a phone-first project ledger. Money summary on top, then the build as a vertical sequence of stages; the active stage opens to its proof checklist and payment gate. Wide screens add a payment log beside it. */
+:root {
+  --bg: #F3F2EE; --surface: #FFFFFF; --ink: #1D2321; --muted: #5B6360; --line: #D9D8D1;
+  --brick: #B4492B; --brick-ink: #FFFFFF; --brick-soft: #F6E3DC;
+  --ok: #2F6B4F; --ok-soft: #E1EEE6; --wait: #9A6A0B; --wait-soft: #F7ECD2; --lock: #7B8380;
+  --display: "Bricolage Grotesque", "Arial Narrow", system-ui, sans-serif;
+  --body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161A19; --surface: #1F2523; --ink: #ECEDEA; --muted: #A3ABA7; --line: #333B38;
+    --brick: #E0704F; --brick-ink: #1A0E09; --brick-soft: #3A2219;
+    --ok: #74C49A; --ok-soft: #1C3328; --wait: #E3B356; --wait-soft: #3A2E14; --lock: #87908C;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #161A19; --surface: #1F2523; --ink: #ECEDEA; --muted: #A3ABA7; --line: #333B38;
+  --brick: #E0704F; --brick-ink: #1A0E09; --brick-soft: #3A2219;
+  --ok: #74C49A; --ok-soft: #1C3328; --wait: #E3B356; --wait-soft: #3A2E14; --lock: #87908C;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body); }
+.app { max-width: 1060px; margin: 0 auto; padding-inline: 16px; padding-block: 16px 48px; display: flex; flex-direction: column; gap: 16px; }
+h1, h2, h3 { font-family: var(--display); margin: 0; line-height: 1.15; text-wrap: balance; }
+button { font: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--brick); outline-offset: 2px; border-radius: 4px; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.label { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+
+.demo-note { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 0.85rem; background: var(--wait-soft); color: var(--ink); border-radius: 8px; padding: 8px 12px; }
+.demo-note button { background: transparent; border: 1px solid var(--line); color: var(--ink); border-radius: 6px; padding: 4px 10px; font-size: 0.8rem; }
+
+.top { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 8px; font-family: var(--display); font-weight: 800; font-size: 1.05rem; }
+.brand i { width: 20px; height: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+.brand i b { background: var(--brick); border-radius: 1px; }
+.brand i b:nth-child(n+3) { background: var(--line); }
+.proj h1 { font-size: 1.6rem; font-weight: 800; }
+.proj p { margin: 2px 0 0; color: var(--muted); font-size: 0.88rem; }
+
+.summary { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); }
+.tiles div { background: var(--surface); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tiles .v { font-family: var(--mono); font-size: 1.25rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.tiles .gap .v { color: var(--brick); }
+.tiles .gap.clear .v { color: var(--ok); }
+.meter { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--line); }
+.track { height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; display: flex; }
+.track .a { background: var(--ok); }
+.track .b { background: var(--brick); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.78rem; color: var(--muted); }
+.legend span::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: 0; background: var(--sw); }
+
+.cols { display: grid; grid-template-columns: 1.55fr 1fr; gap: 16px; align-items: start; }
+.cols > * { min-width: 0; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.panel-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.panel-h h2 { font-size: 1.05rem; font-weight: 600; }
+
+.stages { list-style: none; margin: 0; padding: 0; }
+.stage + .stage { border-top: 1px solid var(--line); }
+.st-row { width: 100%; display: grid; grid-template-columns: 26px 1fr auto; gap: 12px; align-items: center; padding: 12px 16px; background: transparent; border: 0; color: inherit; text-align: left; }
+.st-row:hover { background: color-mix(in srgb, var(--bg) 60%, transparent); }
+.dot { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font: 600 0.78rem var(--mono); }
+.st-name { font-weight: 600; display: block; }
+.st-sub { font: 0.76rem var(--mono); color: var(--muted); display: block; }
+.pill { font: 500 0.7rem var(--mono); padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
+[data-s="done"] .dot { background: var(--ok); color: var(--surface); }
+[data-s="done"] .pill { background: var(--ok-soft); color: var(--ok); }
+[data-s="hold"] .dot { background: var(--wait); color: var(--surface); }
+[data-s="hold"] .pill { background: var(--wait-soft); color: var(--wait); }
+[data-s="ready"] .dot { background: var(--brick); color: var(--brick-ink); }
+[data-s="ready"] .pill { background: var(--brick-soft); color: var(--brick); }
+[data-s="locked"] .dot { border: 2px solid var(--lock); color: var(--lock); }
+[data-s="locked"] .pill { border: 1px solid var(--line); color: var(--lock); }
+[data-s="locked"] .st-name { color: var(--muted); }
+
+.detail { padding: 4px 16px 18px 54px; display: flex; flex-direction: column; gap: 14px; }
+.money-row { display: flex; gap: 18px; flex-wrap: wrap; font-size: 0.85rem; }
+.money-row b { font-family: var(--mono); font-weight: 500; }
+.bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--ink); }
+.checks { display: flex; flex-direction: column; gap: 2px; }
+.check { display: flex; align-items: flex-start; gap: 10px; padding: 7px 8px; border-radius: 8px; cursor: pointer; }
+.check:hover { background: var(--bg); }
+.check input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--ok); flex: none; }
+.check.done span { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--line); }
+.gate { border-radius: 8px; padding: 10px 12px; font-size: 0.88rem; }
+.gate.hold { background: var(--wait-soft); }
+.gate.ok { background: var(--ok-soft); }
+.gate.lock { background: var(--bg); color: var(--muted); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { border-radius: 8px; padding: 9px 14px; font-weight: 600; font-size: 0.9rem; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.btn:hover { border-color: var(--ink); }
+.btn.primary { background: var(--brick); border-color: var(--brick); color: var(--brick-ink); }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+.pay { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.pay label { font-size: 0.85rem; color: var(--muted); }
+.pay input { font: 1rem var(--mono); width: 120px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+.confirm { background: var(--wait-soft); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem; }
+
+.msgbox { background: var(--bg); border: 1px dashed var(--line); border-radius: 8px; padding: 10px 12px; white-space: pre-wrap; font-size: 0.86rem; user-select: all; }
+
+.log { list-style: none; margin: 0; padding: 4px 0; max-height: 520px; overflow: auto; }
+.log li { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 10px 16px; }
+.log li + li { border-top: 1px dashed var(--line); }
+.log .what { font-weight: 500; font-size: 0.9rem; }
+.log .when { font: 0.74rem var(--mono); color: var(--muted); grid-column: 1; }
+.log .amt { font-family: var(--mono); font-weight: 500; grid-row: 1 / span 2; grid-column: 2; align-self: center; }
+.log .amt.in { color: var(--ok); }
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 999px; font-size: 0.88rem; }
+
+@media (max-width: 820px) {
+  .cols { grid-template-columns: 1fr; }
+  .tiles { grid-template-columns: 1fr 1fr; }
+  .detail { padding-left: 16px; }
+}
+</style>
+
+<div class="app">
+  <div class="demo-note">
+    <span><b>Demo with example data.</b> Tap a stage, tick off proof, copy a WhatsApp request and record payments.</span>
+    <button type="button" id="reset">Reset demo</button>
+  </div>
+
+  <div class="top">
+    <div class="proj">
+      <div class="brand"><i aria-hidden="true"><b></b><b></b><b></b><b></b></i>Stage-Pay</div>
+      <h1>4-room house · Chitungwiza</h1>
+      <p>Builder: Tendai M. · Started March 2026 · All amounts in USD</p>
+    </div>
+  </div>
+
+  <div class="summary" id="summary"></div>
+
+  <div class="cols">
+    <section class="panel">
+      <div class="panel-h"><h2>Stages</h2><span class="label" id="progress"></span></div>
+      <ol class="stages" id="stages"></ol>
+    </section>
+    <section class="panel">
+      <div class="panel-h"><h2>Payment log</h2><span class="label" id="logcount"></span></div>
+      <ul class="log" id="log"></ul>
+    </section>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const KEY = "stagepay-demo-v1";
+const SEED = {
+  builder: "Tendai",
+  stages: [
+    { name: "Foundation & footings", agreed: 5400, proof: [
+      ["Photo of trenches with tape measure showing depth", 1], ["Photo of concrete footings poured", 1],
+      ["Video walking the full foundation", 1], ["Receipts: cement, river sand, stones", 1]] },
+    { name: "Slab level", agreed: 6200, proof: [
+      ["Photo of brickwork up to slab level, each side", 1], ["Damp-proof course (DPC) visible", 1],
+      ["Photo of slab after pouring", 1], ["Receipts: bricks, cement, mesh", 1]] },
+    { name: "Window level", agreed: 4800, proof: [
+      ["Photo of each outside wall", 1], ["Receipts: bricks and cement", 1],
+      ["Short video walking through every room", 0], ["Window frames set in place", 0]] },
+    { name: "Roof level (wall plate)", agreed: 3000, proof: [
+      ["Lintels/ring beam over all openings", 0], ["Walls at full height, photo of each side", 0],
+      ["Video walk-round", 0], ["Receipts: bricks, cement, steel", 0]] },
+    { name: "Roofing", agreed: 7500, proof: [
+      ["Trusses up, photo from two corners", 0], ["Roof sheets/tiles on, photo from the road", 0],
+      ["Fascia boards fitted", 0], ["Receipts: timber, sheets, nails", 0]] },
+    { name: "Plaster, floors & finishing", agreed: 9000, proof: [
+      ["Inside walls plastered, video of every room", 0], ["Floor screed done", 0],
+      ["Doors and window glass fitted", 0], ["Receipts for each material", 0]] },
+  ],
+  payments: [
+    { stage: 0, amount: 3000, date: "2026-03-04", note: "Foundation materials" },
+    { stage: 0, amount: 2400, date: "2026-03-21", note: "Foundation labour" },
+    { stage: 1, amount: 4000, date: "2026-04-15", note: "Bricks and cement for slab level" },
+    { stage: 1, amount: 2200, date: "2026-05-02", note: "Slab and labour" },
+    { stage: 2, amount: 2600, date: "2026-06-10", note: "Bricks to window level" },
+  ],
+};
+
+let state, open = null, pendingPay = null;
+function load() {
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.stages) return s; } catch (_) {}
+  return structuredClone(SEED);
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (_) {} }
+
+const $ = (id) => document.getElementById(id);
+const usd = (n) => "$" + Math.round(n).toLocaleString("en-US");
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const sentFor = (i) => state.payments.filter((p) => p.stage === i).reduce((a, p) => a + p.amount, 0);
+const proofDone = (i) => state.stages[i].proof.every((p) => p[1]);
+const proofCount = (i) => state.stages[i].proof.filter((p) => p[1]).length;
+
+// A stage is verified once all its proof is in. The next stage stays locked until then.
+function status(i) {
+  const sent = sentFor(i);
+  if (sent > 0 && proofDone(i)) return "done";
+  if (i > 0 && status(i - 1) !== "done") return "locked";
+  if (sent > 0) return "hold";
+  return "ready";
+}
+const PILL = { done: "Verified", hold: "Hold payment", ready: "Ready to fund", locked: "Locked" };
+
+function totals() {
+  let sent = 0, verified = 0, agreed = 0;
+  state.stages.forEach((s, i) => { const x = sentFor(i); sent += x; agreed += s.agreed; if (status(i) === "done") verified += x; });
+  return { sent, verified, gap: sent - verified, agreed };
+}
+
+function renderSummary() {
+  const t = totals();
+  const pv = t.agreed ? (t.verified / t.agreed) * 100 : 0;
+  const pg = t.agreed ? (t.gap / t.agreed) * 100 : 0;
+  $("summary").innerHTML = `
+    <div class="tiles">
+      <div><span class="label">Sent</span><span class="v">${usd(t.sent)}</span></div>
+      <div><span class="label">Verified built</span><span class="v">${usd(t.verified)}</span></div>
+      <div class="gap ${t.gap ? "" : "clear"}"><span class="label">Unproven</span><span class="v">${usd(t.gap)}</span></div>
+      <div><span class="label">Budget left</span><span class="v">${usd(t.agreed - t.sent)}</span></div>
+    </div>
+    <div class="meter">
+      <div class="track" role="img" aria-label="${Math.round(pv)}% of budget verified, ${Math.round(pg)}% sent without proof">
+        <span class="a" style="width:${pv}%"></span><span class="b" style="width:${pg}%"></span></div>
+      <div class="legend">
+        <span style="--sw:var(--ok)">Verified ${Math.round(pv)}%</span>
+        <span style="--sw:var(--brick)">Sent, no proof yet ${Math.round(pg)}%</span>
+        <span style="--sw:var(--line)">Not sent ${Math.round(100 - pv - pg)}%</span>
+        <span class="mono">Total budget ${usd(t.agreed)}</span>
+      </div>
+    </div>`;
+}
+
+function whatsapp(i) {
+  const s = state.stages[i];
+  const missing = s.proof.filter((p) => !p[1]).map((p) => p[0]);
+  const list = (missing.length ? missing : s.proof.map((p) => p[0])).map((m, k) => `${k + 1}. ${m}`).join("\n");
+  return `Hi ${state.builder}, hope you and the team are well. Before I send the next payment for ${s.name.toLowerCase()}, please share:\n${list}\n\nThank you!`;
+}
+
+function renderStages() {
+  const done = state.stages.filter((_, i) => status(i) === "done").length;
+  $("progress").textContent = `${done} of ${state.stages.length} verified`;
+  $("stages").innerHTML = state.stages.map((s, i) => {
+    const st = status(i), sent = sentFor(i), isOpen = open === i;
+    const sub = st === "locked" ? `Unlocks after ${state.stages[i - 1].name.toLowerCase()}`
+      : `${usd(sent)} of ${usd(s.agreed)} sent · proof ${proofCount(i)}/${s.proof.length}`;
+    let detail = "";
+    if (isOpen) {
+      const pct = Math.min(100, (sent / s.agreed) * 100);
+      const gate = st === "done" ? `<div class="gate ok">All proof received. The next stage is unlocked.</div>`
+        : st === "hold" ? `<div class="gate hold"><b>Hold the next payment.</b> ${usd(sent)} sent, ${s.proof.length - proofCount(i)} proof item(s) still missing.</div>`
+        : st === "ready" ? `<div class="gate ok">The previous stage is verified. You can fund this stage.</div>`
+        : `<div class="gate lock">Locked until the previous stage is verified. Don't send money for this stage yet.</div>`;
+      const checks = s.proof.map((p, k) => `
+        <label class="check ${p[1] ? "done" : ""}"><input type="checkbox" data-i="${i}" data-k="${k}" ${p[1] ? "checked" : ""} ${st === "locked" ? "disabled" : ""}><span>${esc(p[0])}</span></label>`).join("");
+      const confirm = pendingPay && pendingPay.stage === i ? `
+        <div class="confirm"><span>Proof for this stage isn't complete yet. Record ${usd(pendingPay.amount)} anyway?</span>
+          <div class="actions"><button class="btn primary" type="button" data-act="pay-yes">Yes, record it</button><button class="btn" type="button" data-act="pay-no">Cancel</button></div></div>` : "";
+      detail = `<div class="detail" id="detail-${i}">
+        <div class="money-row"><span>Agreed <b>${usd(s.agreed)}</b></span><span>Sent <b>${usd(sent)}</b></span><span>Left <b>${usd(s.agreed - sent)}</b></span></div>
+        <div class="bar"><i style="width:${pct}%"></i></div>
+        ${gate}
+        <div><div class="label" style="margin-bottom:4px">Proof checklist</div><div class="checks">${checks}</div></div>
+        ${st !== "locked" && st !== "done" ? `
+          <div><div class="label" style="margin-bottom:6px">WhatsApp request</div>
+            <div class="msgbox" id="msg-${i}">${esc(whatsapp(i))}</div></div>
+          <div class="actions"><button class="btn" type="button" data-act="copy" data-i="${i}">Copy message</button></div>
+          <form class="pay" data-i="${i}">
+            <label for="amt-${i}">Record a payment</label>
+            <input id="amt-${i}" type="number" min="1" step="1" inputmode="numeric" placeholder="Amount" required>
+            <button class="btn primary" type="submit">Record</button>
+          </form>${confirm}` : ""}
+      </div>`;
+    }
+    return `<li class="stage" data-s="${st}">
+      <button class="st-row" type="button" data-open="${i}" aria-expanded="${isOpen}" aria-controls="detail-${i}">
+        <span class="dot">${st === "done" ? "✓" : st === "hold" ? "!" : i + 1}</span>
+        <span><span class="st-name">${esc(s.name)}</span><span class="st-sub">${sub}</span></span>
+        <span class="pill">${PILL[st]}</span>
+      </button>${detail}</li>`;
+  }).join("");
+}
+
+function renderLog() {
+  const rows = [...state.payments].map((p, idx) => ({ ...p, idx })).sort((a, b) => b.date.localeCompare(a.date) || b.idx - a.idx);
+  $("logcount").textContent = `${rows.length} payments`;
+  $("log").innerHTML = rows.map((p) => `<li>
+      <span class="what">${esc(p.note || "Payment")}</span>
+      <span class="amt">${usd(p.amount)}</span>
+      <span class="when">${new Date(p.date + "T12:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} · ${esc(state.stages[p.stage].name)}</span>
+    </li>`).join("");
+}
+
+function render() { renderSummary(); renderStages(); renderLog(); }
+
+let toastTimer;
+function toast(t) { const el = $("toast"); el.textContent = t; el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => (el.hidden = true), 2200); }
+
+function addPayment(i, amount) {
+  state.payments.push({ stage: i, amount, date: new Date().toISOString().slice(0, 10), note: `Payment for ${state.stages[i].name.toLowerCase()}` });
+  pendingPay = null; save(); render(); toast(`Recorded ${usd(amount)}`);
+}
+
+document.addEventListener("click", (e) => {
+  const o = e.target.closest("[data-open]");
+  if (o) { const i = +o.dataset.open; open = open === i ? null : i; pendingPay = null; renderStages(); return; }
+  const a = e.target.closest("[data-act]");
+  if (!a) return;
+  if (a.dataset.act === "copy") {
+    const el = $("msg-" + a.dataset.i);
+    try { navigator.clipboard.writeText(el.textContent).then(() => toast("Message copied. Paste it into WhatsApp."), () => select(el)); }
+    catch (_) { select(el); }
+  }
+  if (a.dataset.act === "pay-yes" && pendingPay) addPayment(pendingPay.stage, pendingPay.amount);
+  if (a.dataset.act === "pay-no") { pendingPay = null; renderStages(); }
+});
+function select(el) { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("Message selected. Copy it to WhatsApp."); }
+
+document.addEventListener("change", (e) => {
+  const c = e.target.closest("input[type=checkbox][data-i]");
+  if (!c) return;
+  const i = +c.dataset.i;
+  const before = status(i);
+  state.stages[i].proof[+c.dataset.k][1] = c.checked ? 1 : 0;
+  save(); render();
+  if (before !== "done" && status(i) === "done") toast(`${state.stages[i].name} verified. Next stage unlocked.`);
+});
+
+document.addEventListener("submit", (e) => {
+  const f = e.target.closest("form.pay");
+  if (!f) return;
+  e.preventDefault();
+  const i = +f.dataset.i, amount = Math.round(+f.querySelector("input").value);
+  if (!(amount > 0)) return;
+  if (status(i) === "hold") { pendingPay = { stage: i, amount }; renderStages(); return; }
+  addPayment(i, amount);
+});
+
+$("reset").addEventListener("click", () => {
+  state = structuredClone(SEED); open = 2; pendingPay = null; save(); render(); toast("Demo reset");
+});
+
+state = load();
+open = state.stages.findIndex((_, i) => status(i) !== "done");
+if (open < 0) open = null;
+render();
+</script>
