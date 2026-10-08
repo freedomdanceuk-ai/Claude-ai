@@ -1,7 +1,7 @@
 """The Keeper's news desk.
 
 Collects stories from the feeds, has Claude pick the ones that fit
-Zvakavanzika, rates each 🟢/🟡/🔴, and drafts a script in The Keeper's
+The Hidden, rates each 🟢/🟡/🔴, and drafts a script in The Keeper's
 voice. Output is a review queue for the human editor; nothing is published
 automatically.
 
@@ -34,7 +34,7 @@ HERE = Path(__file__).resolve().parent
 BIBLE = HERE.parent / "the-keeper.md"
 STATE = HERE / "state" / "seen.json"
 OUT = HERE / "out"
-USER_AGENT = "ZvakavanzikaDesk/1.0 (+news review tool)"
+USER_AGENT = "TheHiddenDesk/1.0 (+news review tool)"
 MAX_ITEMS_PER_FEED = 25
 MAX_SEEN = 5000
 
@@ -60,7 +60,7 @@ class Pick(BaseModel):
     segment: Segment
     rating: Rating
     rating_reason: str = Field(description="Why this rating, citing which sources support it")
-    why_it_works: str = Field(description="One line: why Zvakavanzika viewers will care")
+    why_it_works: str = Field(description="One line: why The Hidden viewers will care")
     risk_flags: list[str] = Field(description="Editorial/legal risks the editor must check; empty if none")
 
 
@@ -137,7 +137,7 @@ def save_seen(seen: set[str], new_keys: list[str]) -> None:
 
 def system_prompt() -> str:
     bible = BIBLE.read_text()
-    return f"""You are the editorial desk for Zvakavanzika ("hidden things"), a channel for bizarre, taboo and mysterious stories, presented by an AI anchor called The Keeper. The audience is mainly Zimbabwean and Southern African, on TikTok, YouTube Shorts and WhatsApp.
+    return f"""You are the editorial desk for The Hidden, a channel for bizarre, taboo and mysterious stories, presented by an AI anchor called The Keeper. The audience is mainly Zimbabwean and Southern African, on TikTok, YouTube Shorts and WhatsApp.
 
 The channel's anchor bible, including its truth-rating system and non-negotiable rules:
 
@@ -191,7 +191,7 @@ def pick_stories(client, items: list[dict], max_picks: int) -> list[Pick]:
 
 {listing}
 
-Choose up to {max_picks} stories that best fit Zvakavanzika. Prefer Zimbabwean and African stories, then the strongest global ones. Mix segments where possible. Group items covering the same story into one pick. Leave out ordinary news, anything that breaks the editorial rules, and anything too thin to build 60 seconds on. Fewer strong picks beat more weak ones."""
+Choose up to {max_picks} stories that best fit The Hidden. Prefer Zimbabwean and African stories, then the strongest global ones. Mix segments where possible. Group items covering the same story into one pick. Leave out ordinary news, anything that breaks the editorial rules, and anything too thin to build 60 seconds on. Fewer strong picks beat more weak ones."""
     picks = call(client, Picks, prompt, effort="medium").picks
     valid = {it["id"] for it in items}
     return [p for p in picks if p.item_ids and set(p.item_ids) <= valid][:max_picks]
@@ -223,7 +223,7 @@ BADGE = {Rating.confirmed: "🟢 CONFIRMED", Rating.reported: "🟡 REPORTED", R
 
 def render(date: str, results: list[tuple[Pick, Script]]) -> str:
     lines = [
-        f"# Zvakavanzika review queue: {date}",
+        f"# The Hidden review queue: {date}",
         "",
         "Nothing here is published until an editor ticks every box. Delete stories you reject.",
         "",

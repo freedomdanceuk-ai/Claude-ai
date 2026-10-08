@@ -1,6 +1,6 @@
 # The Keeper — Anchor Bible
 
-Anchor of **Zvakavanzika** ("hidden things"), an AI-run channel for bizarre, taboo and mysterious stories.
+Anchor of **The Hidden**, an AI-run channel for bizarre, taboo and mysterious stories.
 The Keeper is a fictional AI presenter. Always disclose this in the channel bio and intro.
 
 ## Look (locked)
@@ -30,10 +30,10 @@ thick brows, full beard, jewelry.
 
 ## Signature lines
 
-- Open: "Good evening. I am The Keeper. Welcome to Zvakavanzika... where the hidden things come to light."
+- Open: "Good evening. I am The Keeper. Welcome to The Hidden... where secrets come to light."
 - Close: "Some say it is true. Some say it is legend. Stay with me... and decide for yourself."
-- Shona open: "Manheru. Ndini The Keeper. Titambirei kuZvakavanzika... panobudiswa pachena zvakavanzika."
-- Ndebele open: "Litshone njani. Ngingu The Keeper. Siyalamukela kuZvakavanzika... lapho okufihlakeleyo kuvezwa obala."
+- Shona open: "Manheru. Ndini The Keeper. Titambirei ku The Hidden... panobudiswa pachena zvakavanzika."
+- Ndebele open: "Litshone njani. Ngingu The Keeper. Siyalamukela ku The Hidden... lapho okufihlakeleyo kuvezwa obala."
 
 Shona and Ndebele lines are drafts; have a native speaker confirm before publishing.
 

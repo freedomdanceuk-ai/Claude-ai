@@ -1,0 +1,71 @@
+TOP PRIORITY (read first):
+1. Face and identity match @image1 100% for the entire take — the same man, never drifting.
+2. LIP-SYNC IS THE #1 PRIORITY: his mouth forms EXACTLY the words in @audio1, syllable by syllable, in perfect timing — "Good evening. I am The Keeper. Welcome to The Hidden... where secrets come to light." @audio1 is the ONLY voice and the ONLY words; do not generate any new speech, voice, narration or words. Speaks ONLY English. Lips completely still when the audio is silent.
+3. He must look physically present in a dark late-night studio — fully relit, never a cut-out from a white background.
+4. Calm, knowing, trustworthy storyteller — never scary, never villainous, never theatrical or puppet-like.
+5. The copper bird pendant exists from frame one and never changes design.
+
+=== REFERENCE KEY (attach in this order) ===
+@image1 — character sheet of THE KEEPER: identity reference ONLY (face, hair, beard, outfit), NEVER its lighting. Zimbabwean man, mid-40s, deep brown skin, high cheekbones, thick brows, heavy-lidded brown eyes, close-cropped black hair, neatly trimmed short black beard with a few silver strands, tall and broad-shouldered. Wears a tailored charcoal-black suit over a dark mandarin-collar shirt, no tie, and a small copper bird-shaped pendant on a thin cord.
+@audio1 — pre-recorded voice-over: this audio file is the ONLY spoken content; use it exactly as recorded. Delivery: low, unhurried, warm, with deliberate pauses before reveals — a man sharing a secret, not announcing news.
+
+CRITICAL — RELIGHT:
+Discard the reference lighting entirely. Key light: a single warm amber practical low and to camera-left (as from an old brass lamp just out of frame), sculpting the left side of his face and leaving the right side falling into soft shadow. Fill: very faint cool-blue ambient from behind camera-right, barely lifting the shadow side. Rim: thin warm amber edge light on the right shoulder and back of the head separating him from the dark background. Color bounce: warm amber bounce off the dark polished wooden desk surface onto the underside of his chin and hands. True contact shadows where his forearms rest on the desk. He must look physically present and photographed in the location — never a cut-out pasted from a white background; never brighter than the environment.
+LIGHT STABILITY: the lighting state is constant for the whole take, except a very subtle natural flicker in the amber lamp.
+
+LOCATION:
+A dim, intimate late-night broadcast set: dark polished wooden desk in the foreground, behind him deep shadow with soft out-of-focus shapes — old wooden shelves holding clay pots, woven baskets, carved stone objects, and a single soapstone bird sculpture on a pedestal — all barely visible, warm specks of lamplight in the bokeh, faint haze in the air catching the light. Generic, no brands, no readable text, no screens.
+
+IMAGE QUALITY:
+Cinematic, clean, sharp, high dynamic range, rich deep blacks, warm amber and deep teal-shadow palette. Pore-level skin realism, real texture in the beard, no waxiness, no plastic, no AI-smooth face.
+
+Style:
+Premium late-night mystery broadcast — intimate, moody, grounded, like a storyteller by firelight dressed for television.
+
+Camera movement:
+Slow, steady motorised push-in from a medium shot (desk and hands visible) to a medium close-up (chest up) across the full take, with subtle organic drift — never static, never a jerky move. Shallow depth of field, focus locked on his eyes.
+
+ACTING TASK — THE KEEPER (fully invested; the work reads through the eyes and stillness):
+SCENE DIRECTION (unspoken): this is the first time the viewer meets him — he is inviting them into a room where secrets are kept.
+MOTIVE (fuel): he has spent his life collecting the stories people only whisper, and he believes they deserve to be told carefully and honestly.
+GOAL: to make the viewer lean closer and stay.
+OBSTACLE: the viewer is scrolling and sceptical; one hint of performance or sensationalism and he loses them.
+TACTIC: he speaks to ONE person through the lens, checking after each line whether it landed, holding back more than he says.
+Moment to moment:
+- "Good evening." — looks up from the desk into the lens as if the viewer just walked in; a small, warm acknowledgement.
+- "I am The Keeper." — steady, settled gaze; the faintest knowing half-smile at the corner of the mouth.
+- "Welcome to The Hidden..." — leans forward slightly, forearms on the desk, fingers loosely interlaced; eyes check the viewer.
+- "...where secrets come to light." — THE REVEAL: a slow, small tilt of the head; the lamp catches his eyes.
+(Safety: gaze always engaged in the task — never frozen or glassy; natural blink cadence.)
+
+Physics:
+Natural breathing visible in the shoulders; subtle fabric folds move with his posture; faint haze drifts slowly through the lamp light; hands rest with real weight on the desk.
+
+Composition:
+Vertical 9:16. Him centred, eyes on the upper-third line; top of the frame and background kept dark and calm; desk edge in the lower frame.
+
+PROP RULE: the copper pendant and the desk exist from frame one; nothing appears, disappears or changes design. No other props.
+
+Consistency:
+Same face, hair, beard, suit, shirt and pendant from first to last frame.
+
+Editing:
+One continuous take, no cuts.
+
+Technical:
+Vertical 9:16, smooth natural motion, no warping of hands or face.
+
+ON-SCREEN TEXT: none. (Added in post by the team.) No logos, no lower thirds, no captions.
+
+Audio:
+Use @audio1 exactly as recorded as the soundtrack and lip-sync to it precisely; no added words, no other voices, no generated speech. Under it, very quiet room tone and a faint low ambient hum; no music.
+
+Mood & tempo:
+Slow, intimate, magnetic, quietly mysterious.
+
+SHOT BREAKDOWN:
+0.0–1.5s — "Good evening." He lifts his gaze from the desk into the lens. Medium shot, push-in begins.
+1.5–3.5s — "I am The Keeper." Settled gaze, faint half-smile.
+3.5–5.5s — "Welcome to The Hidden..." Leans forward, forearms on the desk.
+5.5–8.0s — "...where secrets come to light." THE REVEAL: slow head tilt, lamp catches his eyes.
+8.0–10.0s — FINAL BEAT: silent; he holds the gaze, the half-smile deepens almost imperceptibly, the lamp flickers once; lips completely still. Push-in completes on a medium close-up.
