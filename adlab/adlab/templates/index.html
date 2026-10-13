@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Upload an advert</h1>
+<p class="hint">Photo or video. AdLab scores its viral potential, finds your audience, plans your budget and makes every social media size for you.</p>
+
+<form class="card" method="post" action="{{ url_for('analyze') }}" enctype="multipart/form-data" data-busy>
+  <div class="drop">
+    <label for="media">Photo or video file</label>
+    <input id="media" type="file" name="media" accept="{{ accept }}" required>
+  </div>
+
+  <h2 style="margin-top:20px">About your business</h2>
+  <div class="grid g2">
+    <div><label>Business / brand name</label><input type="text" name="name" placeholder="e.g. Black Gold Furniture"></div>
+    <div><label>Product in this advert</label><input type="text" name="product" placeholder="e.g. 7-seater corner lounge suite"></div>
+    <div><label>Type of business</label>
+      <select name="category"><option value="auto">Detect automatically</option>
+      {% for k,c in categories.items() %}<option value="{{k}}">{{c.name}}</option>{% endfor %}</select></div>
+    <div><label>Price shown to customers <span class="hint">(leave blank if none)</span></label><input type="text" name="price" placeholder="e.g. $650 or From $450"></div>
+    <div><label>How customers order</label><input type="text" name="contact" placeholder="e.g. 0771 234 567"></div>
+    <div><label>Logo <span class="hint">(optional, PNG)</span></label><input type="file" name="logo" accept="image/*"></div>
+  </div>
+  <div style="margin-top:14px"><label>Caption / text you plan to post with it <span class="hint">(optional)</span></label>
+    <textarea name="ad_text" placeholder="e.g. Brand new corner suite, lay-by available, free delivery in Harare. WhatsApp to order!"></textarea></div>
+
+  <h2 style="margin-top:20px">Where & how much</h2>
+  <label>Where are your customers?</label>
+  <div class="checks">{% for k,r in regions.items() %}
+    <label><input type="checkbox" name="regions" value="{{k}}" {% if k=='zimbabwe' %}checked{% endif %}> {{ r.name }}</label>{% endfor %}</div>
+  <div class="grid g3" style="margin-top:14px">
+    <div><label>Goal</label><select name="goal">{% for k,g in goals.items() %}<option value="{{k}}">{{g}}</option>{% endfor %}</select></div>
+    <div><label>Total ad budget (USD)</label><input type="number" name="budget" min="0" step="1" placeholder="e.g. 100"></div>
+    <div><label>Campaign length (days) <span class="hint">blank = recommend</span></label><input type="number" name="days" min="1" max="90" placeholder="auto"></div>
+  </div>
+
+  <div style="margin-top:18px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+    <button class="btn"><span class="idle">Analyse my advert</span><span class="loading">Analysing… (videos take up to a minute)</span></button>
+    <label style="font-weight:500;margin:0"><input type="checkbox" name="use_ai" {% if ai_on %}checked{% else %}disabled{% endif %}>
+      Deep AI review with Claude {% if not ai_on %}<span class="hint">(set ANTHROPIC_API_KEY to enable)</span>{% endif %}</label>
+  </div>
+</form>
+
+{% if jobs %}
+<div class="card"><h2>Recent adverts</h2>
+<table><tr><th>File</th><th>Product</th><th>Score</th></tr>
+{% for j in jobs %}<tr><td><a href="{{ url_for('report', job_id=j.id) }}">{{ j.name }}</a></td><td>{{ j.product }}</td><td>{{ j.score }}</td></tr>{% endfor %}
+</table></div>
+{% endif %}
+{% endblock %}

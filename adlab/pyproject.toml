@@ -1,0 +1,19 @@
+[project]
+name = "adlab"
+version = "0.1.0"
+description = "Analyse, improve and reformat photo/video adverts for social media"
+requires-python = ">=3.10"
+dependencies = ["flask>=3.0", "pillow>=10.1", "numpy>=1.24", "anthropic>=1.0"]
+
+[project.scripts]
+adlab = "adlab.__main__:main"
+
+[tool.setuptools]
+packages = ["adlab"]
+
+[tool.setuptools.package-data]
+adlab = ["templates/*.html"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
