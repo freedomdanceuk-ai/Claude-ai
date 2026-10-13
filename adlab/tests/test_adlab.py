@@ -117,3 +117,11 @@ def test_web_flow(photo, tmp_path, monkeypatch):
     assert b"Your adverts are ready" in page.data
     assert c.get(f"/job/{job_id}/file/adlab_pack.zip").status_code == 200
     assert c.get("/job/../../etc/file/passwd").status_code == 404
+
+
+def test_price_banner_suggested_even_if_caption_has_cta(photo, tmp_path):
+    job = tmp_path / "job"
+    job.mkdir()
+    r = pipeline.analyze(photo, {"product": "sofa", "price": "$650", "contact": "0771",
+                                 "ad_text": "WhatsApp to order! $650"}, job, use_ai=False)
+    assert {"price_cta", "hook_text"} <= set(r["suggested_actions"])

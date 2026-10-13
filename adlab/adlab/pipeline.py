@@ -67,6 +67,12 @@ def analyze(src: Path, business: dict, job_dir: Path, use_ai: bool = True) -> di
     cta = (claude or {}).get("cta_text") or (
         f"Order on WhatsApp {business['contact']}" if business.get("contact") else "Message us to order today")
 
+    # The caption sits beside the post, not on it: put the price, CTA and hook on the creative itself.
+    if business.get("price") or cta:
+        suggested_actions = sorted(set(suggested_actions) | {"price_cta"})
+    if hook:
+        suggested_actions = sorted(set(suggested_actions) | {"hook_text"})
+
     report = {
         "source": str(src),
         "kind": media.kind,
