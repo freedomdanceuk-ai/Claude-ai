@@ -152,6 +152,8 @@ const store = {
 };
 const S = { file: null, kind: null, url: null, el: null, logo: null, media: null, report: null, outputs: [], isExample: false };
 const cap = { sample: null, downloads: null, images: null };
+const standalone = !window.claude?.use;  // opened as a normal website, not inside claude.ai
+const canSave = () => !!cap.downloads || standalone;
 
 /* ------------------------------------------------------------------ media */
 
@@ -773,13 +775,18 @@ function renderOutputs() {
   const o = S.outputs, webm = o.some((x) => x.ext === "webm");
   S.outputs.forEach((x) => { if (x.url) URL.revokeObjectURL(x.url); x.url = URL.createObjectURL(x.blob); });
   $("outputs").innerHTML = `<div class="card stack" style="margin-top:16px" id="ready"><h2 style="margin:0">Your adverts are ready</h2>
-    <div class="row">${cap.downloads ? `<button class="btn" type="button" id="saveAll">Save all (.zip)</button>` : ""}<button class="btn ghost" type="button" id="savePlan">Save campaign plan</button></div>
-    ${cap.downloads ? "" : `<p class="small mute">Saving files isn't available in this view. On a phone, press and hold a photo to save it.</p>`}
+    <div class="row">${canSave() ? `<button class="btn" type="button" id="saveAll">Save all (.zip)</button>` : ""}<button class="btn ghost" type="button" id="savePlan">Save campaign plan</button></div>
+    ${canSave() ? "" : `<p class="small mute">Saving files isn't available in this view. On a phone, press and hold a photo to save it.</p>`}
     ${webm ? `<p class="small mute">Your browser records WebM video. TikTok and Facebook accept it, but Instagram may not: for MP4 files, open AdLab in Chrome, Edge or Safari.</p>` : ""}
     <div class="outs">${o.map((x, i) => `<figure>${x.type === "video" ? `<video src="${x.url}" controls playsinline muted preload="metadata"></video>` : `<img src="${x.url}" alt="${esc(x.label)}">`}
-      <figcaption>${esc(x.label)}</figcaption>${cap.downloads ? `<button class="btn ghost sm" type="button" data-save="${i}">Save</button>` : ""}</figure>`).join("")}</div></div>`;
+      <figcaption>${esc(x.label)}</figcaption>${canSave() ? `<button class="btn ghost sm" type="button" data-save="${i}">Save</button>` : ""}</figure>`).join("")}</div></div>`;
   const msg = (t) => ($("makeStatus").textContent = t);
   const save = async (filename, data) => {
+    if (!cap.downloads) {
+      const a = document.createElement("a"); a.href = URL.createObjectURL(data instanceof Blob ? data : new Blob([data], { type: "text/markdown" }));
+      a.download = filename; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+      return msg(`Downloading ${filename}`);
+    }
     try { await cap.downloads.save({ filename, data }); msg(`Saved ${filename}`); }
     catch (e) { msg(e?.code === "declined" ? "Save cancelled." : `Couldn't save ${filename}. ${e?.message || ""}`); }
   };
@@ -791,7 +798,7 @@ function renderOutputs() {
     save(`${slug()}_adlab.zip`, await z.generateAsync({ type: "blob" }));
   });
   $("savePlan").addEventListener("click", () => {
-    if (cap.downloads) return save(`${slug()}_campaign_plan.md`, planMarkdown());
+    if (canSave()) return save(`${slug()}_campaign_plan.md`, planMarkdown());
     const pre = document.createElement("pre"); pre.className = "cap"; pre.textContent = planMarkdown(); $("ready").append(pre); pre.scrollIntoView({ behavior: "smooth" });
   });
   $("ready").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
