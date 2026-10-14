@@ -49,7 +49,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 .btn.ghost{background:var(--sunk);color:var(--ink)}
 .btn.sm{padding:7px 12px;font-size:13px}
 .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-.drop{border:2px dashed var(--line);border-radius:14px;padding:18px;display:grid;gap:10px;justify-items:center;text-align:center;background:var(--bg)}
+.drop{position:relative;border:2px dashed var(--line);border-radius:14px;padding:18px;display:grid;gap:10px;justify-items:center;text-align:center;background:var(--bg)}
 .drop.over{border-color:var(--gold)}
 .preview{display:grid;place-items:center;background:var(--sunk);border-radius:12px;overflow:hidden;max-height:420px}
 .preview img,.preview video{max-width:100%;max-height:420px;display:block}
@@ -80,6 +80,10 @@ pre.cap{white-space:pre-wrap;background:var(--sunk);padding:12px;border-radius:1
 .thinking::after{content:"";display:inline-block;width:1em;text-align:left;animation:dots 1.2s steps(4) infinite}
 @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
 @media (prefers-reduced-motion: reduce){.thinking::after{animation:none;content:"..."}}
+.picker{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.btn.pick{font-size:16px;padding:14px 22px;display:inline-block}
+.picker:focus-visible + .pick{outline:2px solid var(--gold);outline-offset:2px}
+#fileStatus.err{color:var(--bad);font-weight:600}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 </style>
 
@@ -95,9 +99,10 @@ pre.cap{white-space:pre-wrap;background:var(--sunk);padding:12px;border-radius:1
     <div class="cols">
       <div class="stack">
         <div id="drop" class="drop">
-          <label class="f" for="media">Photo or video</label>
-          <input id="media" type="file" accept="image/*,video/*">
-          <div class="small mute">JPG, PNG, MP4 or MOV. Your file stays on your device.</div>
+          <input id="media" class="picker" type="file" accept="image/*,video/*">
+          <label class="btn pick" for="media">Choose photo or video</label>
+          <div class="small mute">JPG, PNG, MP4 or MOV. You can also drag a file here or paste a photo. Your file stays on your device.</div>
+          <div id="fileStatus" class="small" aria-live="polite"></div>
         </div>
         <div id="preview" class="preview"></div>
       </div>
@@ -150,16 +155,34 @@ const cap = { sample: null, downloads: null, images: null };
 
 /* ------------------------------------------------------------------ media */
 
-function loadImage(url) {
-  return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error("This image could not be opened. Try a JPG or PNG.")); i.src = url; });
+const HEIC_HELP = "This photo format (HEIC) can't be opened in this browser. On iPhone, choose the photo in Safari, or set Settings > Camera > Formats > Most Compatible, or take a screenshot of it.";
+function loadImage(url, file) {
+  return new Promise((res, rej) => {
+    const i = new Image();
+    i.onload = () => res(i);
+    i.onerror = async () => {
+      // Some browsers can still decode it through createImageBitmap (e.g. HEIC on newer Safari).
+      try { if (file && window.createImageBitmap) { const bm = await createImageBitmap(file); const c = canvas(bm.width, bm.height); c.getContext("2d").drawImage(bm, 0, 0); return res(c); } } catch {}
+      rej(new Error(/hei[cf]/i.test(file?.type || file?.name || "") ? HEIC_HELP : "This image couldn't be opened. Try a JPG or PNG."));
+    };
+    i.src = url;
+  });
 }
 function loadVideo(url) {
   return new Promise((res, rej) => {
     const v = document.createElement("video");
-    v.muted = true; v.playsInline = true; v.preload = "auto"; v.crossOrigin = "anonymous";
-    v.onloadeddata = () => res(v);
-    v.onerror = () => rej(new Error("This video could not be opened in your browser. Try an MP4 (H.264) file."));
-    v.src = url;
+    v.muted = true; v.playsInline = true; v.preload = "auto";
+    v.setAttribute("muted", ""); v.setAttribute("playsinline", "");
+    let settled = false;
+    const ok = () => { if (!settled && v.videoWidth) { settled = true; res(v); } };
+    const fail = (msg) => { if (!settled) { settled = true; rej(new Error(msg)); } };
+    v.addEventListener("loadeddata", ok);
+    // iPhone Safari may stop after the metadata: nudge it to decode a frame.
+    v.addEventListener("loadedmetadata", () => { try { v.currentTime = 0.01; } catch {} setTimeout(ok, 1500); });
+    v.addEventListener("seeked", ok);
+    v.onerror = () => fail("This video couldn't be opened in this browser. Try an MP4 file, or open AdLab in Chrome or Safari.");
+    setTimeout(() => (v.videoWidth ? ok() : fail("This video is taking too long to open. Try a shorter MP4, or open AdLab in Chrome or Safari.")), 20000);
+    v.src = url; v.load();
   });
 }
 function seek(v, t) {
@@ -170,7 +193,7 @@ function seek(v, t) {
     setTimeout(done, 3000);
   });
 }
-function dims(el) { return el.tagName === "VIDEO" ? [el.videoWidth, el.videoHeight] : [el.naturalWidth, el.naturalHeight]; }
+function dims(el) { return el.tagName === "VIDEO" ? [el.videoWidth, el.videoHeight] : el.tagName === "CANVAS" ? [el.width, el.height] : [el.naturalWidth, el.naturalHeight]; }
 function canvas(w, h) { const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; }
 function snapshot(el, maxSide) {
   const [w, h] = dims(el); const k = Math.min(1, maxSide / Math.max(w, h));
@@ -797,9 +820,10 @@ async function useFile(file, isExample = false) {
   if (S.url) URL.revokeObjectURL(S.url);
   S.file = file; S.url = URL.createObjectURL(file); S.isExample = isExample;
   S.kind = file.type.startsWith("video") || /\.(mp4|mov|m4v|webm|3gp|mkv)$/i.test(file.name) ? "video" : "image";
-  S.el = S.kind === "video" ? await loadVideo(S.url) : await loadImage(S.url);
+  S.el = S.kind === "video" ? await loadVideo(S.url) : await loadImage(S.url, file);
   const pv = $("preview"); pv.innerHTML = "";
   if (S.kind === "video") { const v = document.createElement("video"); v.src = S.url; v.controls = true; v.muted = true; v.playsInline = true; pv.append(v); }
+  else if (S.el.tagName === "CANVAS") { S.el.style.maxWidth = "100%"; pv.append(S.el); }
   else { const i = document.createElement("img"); i.src = S.url; i.alt = "Your advert"; pv.append(i); }
   $("exampleNote").hidden = !isExample;
 }
@@ -879,18 +903,25 @@ async function boot() {
   fillForm();
   const form = $("form");
   form.addEventListener("submit", (e) => { e.preventDefault(); analyse({ useAi: !$("aiChip").hidden && $("useAi").checked }); });
-  $("media").addEventListener("change", async () => {
-    const f = $("media").files[0]; if (!f) return;
-    try { await useFile(f); $("product").value = ""; $("price").value = ""; $("caption").value = ""; $("status").textContent = "Fill in the details, then press Analyse my advert."; $("product").focus(); }
-    catch (e) { $("status").textContent = e.message; }
-  });
-  $("logo").addEventListener("change", async () => { const f = $("logo").files[0]; S.logo = f ? await loadImage(URL.createObjectURL(f)).catch(() => null) : null; });
+  const fileMsg = (t, err = false) => { const el = $("fileStatus"); el.textContent = t; el.classList.toggle("err", err); };
+  const pick = async (f) => {
+    if (!f) return;
+    fileMsg(`Opening ${f.name || "your file"}...`);
+    try {
+      await useFile(f);
+      $("product").value = ""; $("price").value = ""; $("caption").value = ""; $("status").textContent = "";
+      fileMsg(`${f.name || "File"} is ready. Fill in the details below, then press Analyse my advert.`);
+      $("product").focus({ preventScroll: true });
+    } catch (e) { fileMsg(e?.message || "This file couldn't be opened.", true); }
+  };
+  $("media").addEventListener("change", () => pick($("media").files[0]));
+  document.addEventListener("paste", (e) => { const f = [...(e.clipboardData?.files || [])].find((x) => /^(image|video)\//.test(x.type)); if (f) { e.preventDefault(); pick(f); } });
+  $("logo").addEventListener("change", async () => { const f = $("logo").files[0]; S.logo = f ? await loadImage(URL.createObjectURL(f), f).catch(() => null) : null; });
   const drop = $("drop");
   drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); });
   drop.addEventListener("dragleave", () => drop.classList.remove("over"));
   drop.addEventListener("drop", async (e) => {
-    e.preventDefault(); drop.classList.remove("over"); const f = e.dataTransfer.files[0]; if (!f) return;
-    try { await useFile(f); $("status").textContent = "Fill in the details, then press Analyse my advert."; } catch (err) { $("status").textContent = err.message; }
+    e.preventDefault(); drop.classList.remove("over"); pick(e.dataTransfer.files[0]);
   });
 
   await document.fonts.ready.catch(() => {});
