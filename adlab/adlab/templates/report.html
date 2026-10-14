@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}AdLab report{% endblock %}
+{% block body %}
+{% set c = r.claude if r.claude and not r.claude.error else None %}
+{% set colour = '#1f8a4c' if r.score >= 72 else ('#c08400' if r.score >= 50 else '#c2410c') %}
+
+<h1>{{ r.business.product or r.source.split('/')[-1] }}</h1>
+<p class="hint">{{ r.audience.category_name }} · {{ r.media.width }}×{{ r.media.height }} {{ r.media.orientation }} {{ r.kind }}{% if r.kind == 'video' %} · {{ '%.1f'|format(r.media.duration) }} s{% endif %}</p>
+
+<div class="grid g2">
+  <div class="card">
+    <h2>Virality potential</h2>
+    <div class="score" style="color:{{ colour }}">{{ r.score }}<span style="font-size:22px">/100</span></div>
+    <p><span class="pill">Grade {{ r.virality.grade }}</span> {{ r.virality.verdict }}</p>
+    {% if c %}<p class="hint">Blend of Claude's creative review ({{ c.virality_score }}) and technical checks ({{ r.virality.score }}).</p>{% endif %}
+    {% if r.claude and r.claude.error %}<p class="hint">AI review unavailable: {{ r.claude.error }}</p>{% endif %}
+  </div>
+  <div class="card">
+    <h2>Score breakdown</h2>
+    {% for f in r.virality.factors %}
+      <div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between"><b style="font-size:13px">{{ f.name }}</b><span class="hint">{{ f.score|round|int }}</span></div>
+      <div class="bar"><i style="width:{{ f.score }}%;background:{{ '#1f8a4c' if f.score>=70 else ('#c08400' if f.score>=45 else '#c2410c') }}"></i></div>
+      <div class="hint" style="font-size:12px">{{ f.detail }}</div></div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="card">
+  <h2>What we looked at</h2>
+  <div class="frames">{% for p in r.media.frame_paths %}<img src="{{ url_for('job_file', job_id=job_id, name=p.split('/')[-1]) }}" alt="frame {{ loop.index }}">{% endfor %}</div>
+  {% if c %}
+    <p>{{ c.what_we_see }}</p><p>{{ c.virality_reasoning }}</p>
+    <div class="grid g2">
+      <div><h3>Working well</h3><ul>{% for s in c.strengths %}<li>{{ s }}</li>{% endfor %}</ul></div>
+      <div><h3>Holding it back</h3><ul>{% for s in c.weaknesses %}<li>{{ s }}</li>{% endfor %}</ul></div>
+    </div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Recommendations</h2>
+  <table>
+    <tr><th>Priority</th><th>What to do</th><th>Auto-fix</th></tr>
+    {% for x in r.virality.recommendations %}
+      <tr><td class="{{ x.priority }}"><b>{{ x.priority }}</b></td><td>{{ x.text }}</td><td>{% if x.action %}<span class="pill">✓ {{ actions[x.action] }}</span>{% endif %}</td></tr>
+    {% endfor %}
+    {% if c %}{% for x in c.recommendations %}
+      <tr><td class="{{ x.priority }}"><b>{{ x.priority }}</b></td><td>{{ x.text }}</td><td class="hint">AI tip</td></tr>
+    {% endfor %}{% endif %}
+  </table>
+</div>
+
+<div class="card">
+  <h2>Who to target</h2>
+  <div class="grid g2">
+  {% if c and c.audiences %}
+    {% for a in c.audiences %}<div><h3>{{ a.name }}</h3>
+      <div><span class="pill">{{ a.age_range }}</span> <span class="pill">{{ a.gender }}</span></div>
+      <p style="margin:6px 0">{{ a.angle }}</p>
+      <div class="hint">Interests: {{ a.interests|join(', ') }}<br>Where: {{ a.locations|join(', ') }}</div></div>{% endfor %}
+  {% else %}
+    {% for s in r.audience.segments %}<div><h3>{{ s.name }}</h3>
+      <div><span class="pill">{{ s.age }}</span> <span class="pill">{{ s.gender }}</span></div>
+      <p style="margin:6px 0">{{ s.why }}</p><div class="hint">Interests to target: {{ s.interests|join(', ') }}</div></div>{% endfor %}
+  {% endif %}
+  </div>
+  <h3>Market notes</h3>
+  <ul>{% for g in r.audience.regions %}<li><b>{{ g.name }}</b>: best times {{ g.peak_times }}. {{ g.notes }}</li>{% endfor %}</ul>
+</div>
+
+{% set p = r.plan %}
+<div class="card">
+  <h2>Channels & budget</h2>
+  {% if not p.budget_given %}<p class="hint">No budget entered, so this plan uses an example of $100. Re-run with your own figure.</p>{% endif %}
+  <p><b>${{ '%.0f'|format(p.budget) }}</b> over <b>{{ p.days }} days</b> (${{ '%.2f'|format(p.daily_total) }}/day) · goal: {{ p.goal }}</p>
+  <div class="tablewrap"><table>
+    <tr><th>Channel</th><th>Share</th><th>Total</th><th>Per day</th><th>Est. reach</th><th>Est. {{ p.result_word }}</th><th>Where to set it up</th></tr>
+    {% for ch in p.channels %}
+    <tr><td><b>{{ ch.name }}</b></td><td>{{ ch.share_pct }}%</td><td>${{ '%.2f'|format(ch.budget) }}</td><td>${{ '%.2f'|format(ch.daily) }}</td>
+      <td>{{ '{:,}'.format(ch.est_reach) }}</td><td>{{ ch.est_results }}</td><td class="hint">{{ ch.how }}</td></tr>
+    {% endfor %}
+  </table></div>
+  {% if p.organic %}<p><b>Also post free on:</b> {% for o in p.organic %}{{ o.name }} <span class="hint">({{ o.how }})</span>{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+  {% for x in p.skipped %}<p class="hint">• {{ x }}</p>{% endfor %}
+  <h3>Run it in three steps</h3>
+  <ul>{% for ph in p.phases %}<li><b>{{ ph.name }}</b> (day {{ ph.days }}{% if ph.spend %}, ${{ '%.0f'|format(ph.spend) }}{% endif %}): {{ ph.what }}</li>{% endfor %}</ul>
+  <p class="hint">{{ p.notes|join(' ') }}</p>
+</div>
+
+{% if c %}
+<div class="card">
+  <h2>Ready-to-paste captions</h2>
+  <div class="grid g2">{% for k, v in c.captions.items() %}<div><h3>{{ k|title }}</h3><pre class="cap">{{ v }}</pre></div>{% endfor %}</div>
+  <h3>Hashtags</h3><pre class="cap">{% for h in c.hashtags %}{{ h if h.startswith('#') else '#' ~ h }} {% endfor %}</pre>
+  {% if c.reshoot_ideas %}<h3>Ideas for your next shoot</h3><ul>{% for x in c.reshoot_ideas %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}
+</div>
+{% else %}
+<div class="card"><h2>Hook ideas for your next videos</h2><ul>{% for h in r.audience.hooks %}<li>{{ h }}</li>{% endfor %}</ul></div>
+{% endif %}
+
+<form class="card" method="post" action="{{ url_for('produce', job_id=job_id) }}" data-busy>
+  <h2>Apply the fixes & make the formats</h2>
+  <label>Fixes to apply</label>
+  <div class="checks">{% for k, label in actions.items() %}
+    {% if not (r.kind == 'image' and k in ['trim','normalize_audio']) %}
+    <label><input type="checkbox" name="actions" value="{{k}}" {% if k in r.suggested_actions %}checked{% endif %}> {{ label }}</label>
+    {% endif %}{% endfor %}</div>
+
+  <div class="grid g2" style="margin-top:14px">
+    <div><label>Hook text (first 3 seconds / top of image)</label><input type="text" name="hook" value="{{ r.branding.hook }}" placeholder="e.g. Guess the price of this lounge suite?"></div>
+    <div><label>Brand name on the advert</label><input type="text" name="brand" value="{{ r.branding.brand }}"></div>
+    <div><label>Price</label><input type="text" name="price" value="{{ r.branding.price }}"></div>
+    <div><label>Call to action</label><input type="text" name="cta" value="{{ r.branding.cta }}"></div>
+    <div><label>Banner colour</label><input type="color" name="color" value="{{ r.branding.color or '#F5B700' }}"></div>
+  </div>
+
+  <label style="margin-top:14px">Sizes to create <span class="hint">(pre-selected from your channel plan)</span></label>
+  <div class="checks">{% for k, s in specs.items() %}
+    <label><input type="checkbox" name="targets" value="{{k}}" {% if k in r.suggested_targets %}checked{% endif %}> {{ s.label }}</label>{% endfor %}</div>
+  <p style="margin-top:16px"><button class="btn"><span class="idle">Create my adverts</span><span class="loading">Rendering… videos can take a few minutes</span></button></p>
+</form>
+
+{% if produced %}
+<div class="card" id="downloads">
+  <h2>Your adverts are ready</h2>
+  <p><a class="btn" href="{{ url_for('job_file', job_id=job_id, name=produced.zip) }}">Download everything (.zip)</a>
+     <a class="btn secondary" href="{{ url_for('job_file', job_id=job_id, name=produced.plan, dl=1) }}">Campaign plan</a></p>
+  <div class="outs">{% for f in produced.files %}
+    <figure>{% if f.name.endswith('.mp4') %}<video src="{{ url_for('job_file', job_id=job_id, name=f.name) }}" controls muted playsinline preload="metadata"></video>
+      {% else %}<img src="{{ url_for('job_file', job_id=job_id, name=f.name) }}" alt="{{ f.label }}">{% endif %}
+      <figcaption><b>{{ f.label }}</b> · <a href="{{ url_for('job_file', job_id=job_id, name=f.name, dl=1) }}">download</a></figcaption></figure>
+  {% endfor %}</div>
+</div>
+{% endif %}
+{% endblock %}
