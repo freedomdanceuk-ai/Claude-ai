@@ -1,0 +1,910 @@
+<title>AdLab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a single working column of numbered steps (upload, report, make) under a slim masthead. */
+:root{
+  --bg:#f1f2ee; --surface:#ffffff; --sunk:#e8e9e3; --ink:#16171b; --mute:#5c5f69; --line:#d9dad3;
+  --gold:#b87d00; --gold-ink:#16171b; --gold-fill:#f2b31b; --good:#17804a; --warn:#a86a00; --bad:#bf3b0b;
+  --display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --body:"Instrument Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111214; --surface:#1a1b1f; --sunk:#232429; --ink:#ececef; --mute:#a0a2ac; --line:#2e2f35;
+  --gold:#f2b31b; --gold-ink:#16171b; --gold-fill:#f2b31b; --good:#3fbf7a; --warn:#e3a33a; --bad:#f07049; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111214; --surface:#1a1b1f; --sunk:#232429; --ink:#ececef; --mute:#a0a2ac; --line:#2e2f35;
+  --gold:#f2b31b; --gold-ink:#16171b; --gold-fill:#f2b31b; --good:#3fbf7a; --warn:#e3a33a; --bad:#f07049; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--body);
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:0 64px}
+.wrap{max-width:1040px;margin:0 auto}
+header.mast{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;padding-block:18px 14px;border-bottom:1px solid var(--line);margin-bottom:22px}
+.logo{font:800 24px/1 var(--display);letter-spacing:-.03em}.logo b{color:var(--gold)}
+.tag{color:var(--mute);font-size:14px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
+h1{font-size:clamp(26px,5vw,34px);font-weight:800;letter-spacing:-.025em;line-height:1.1}
+h2{font-size:20px;font-weight:800;letter-spacing:-.015em;margin-bottom:12px}
+h3{font-size:15px;font-weight:600;margin:14px 0 6px}
+p{margin:0 0 10px}
+.step{display:flex;gap:10px;align-items:baseline;margin:30px 0 12px}
+.step .n{font:800 13px/1 var(--display);color:var(--gold);letter-spacing:.08em;text-transform:uppercase}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;min-width:0}
+.stack{display:grid;gap:16px}
+.cols{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.cols3{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+.mute{color:var(--mute)}.small{font-size:13px}
+label.f{display:block;font-weight:600;font-size:13px;margin-bottom:5px}
+label.f span{font-weight:400;color:var(--mute)}
+input[type=text],input[type=number],select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;min-width:0}
+textarea{min-height:64px;resize:vertical}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,.chip:focus-within{outline:2px solid var(--gold);outline-offset:2px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;gap:7px;align-items:center;background:var(--sunk);padding:7px 11px;border-radius:999px;font-size:14px;cursor:pointer;user-select:none}
+.chip input{margin:0;accent-color:var(--gold)}
+.btn{appearance:none;border:0;border-radius:10px;padding:12px 18px;font:700 15px var(--body);cursor:pointer;background:var(--gold-fill);color:var(--gold-ink)}
+.btn:disabled{opacity:.55;cursor:progress}
+.btn.ghost{background:var(--sunk);color:var(--ink)}
+.btn.sm{padding:7px 12px;font-size:13px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.drop{border:2px dashed var(--line);border-radius:14px;padding:18px;display:grid;gap:10px;justify-items:center;text-align:center;background:var(--bg)}
+.drop.over{border-color:var(--gold)}
+.preview{display:grid;place-items:center;background:var(--sunk);border-radius:12px;overflow:hidden;max-height:420px}
+.preview img,.preview video{max-width:100%;max-height:420px;display:block}
+.notice{border:1px solid var(--line);border-left:4px solid var(--gold);background:var(--surface);border-radius:10px;padding:12px 14px;margin-bottom:16px}
+.score{font:800 64px/1 var(--display);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.score small{font-size:22px;color:var(--mute);letter-spacing:0}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;background:var(--sunk);white-space:nowrap}
+.factor{display:grid;gap:3px;margin-bottom:10px}
+.factor .top{display:flex;justify-content:space-between;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.bar{height:8px;background:var(--sunk);border-radius:6px;overflow:hidden}.bar i{display:block;height:100%;border-radius:6px}
+.frames{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}.frames img{height:120px;border-radius:8px;flex:none}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mute);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.pr{font-weight:700;text-transform:capitalize;white-space:nowrap}
+.pr.high{color:var(--bad)}.pr.medium{color:var(--warn)}.pr.low{color:var(--mute)}
+.fix{display:inline-block;font-size:12px;font-weight:600;background:var(--sunk);padding:3px 8px;border-radius:6px}
+.seg h3{margin-top:0}
+ul{padding-left:20px;margin:6px 0}li{margin-bottom:3px}
+pre.cap{white-space:pre-wrap;background:var(--sunk);padding:12px;border-radius:10px;font:inherit;margin:0 0 6px}
+.outs{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr))}
+.outs figure{margin:0;display:grid;gap:6px;align-content:start}
+.outs img,.outs video{width:100%;border-radius:10px;background:#000;display:block}
+.outs figcaption{font-size:13px;font-weight:600}
+.progress{font-variant-numeric:tabular-nums}
+.thinking::after{content:"";display:inline-block;width:1em;text-align:left;animation:dots 1.2s steps(4) infinite}
+@keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+@media (prefers-reduced-motion: reduce){.thinking::after{animation:none;content:"..."}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+
+<div class="wrap">
+  <header class="mast"><div class="logo">Ad<b>Lab</b></div><div class="tag">Score, fix and resize your adverts for every social network</div></header>
+
+  <div id="exampleNote" class="notice" hidden>
+    <b>This is an example.</b> The advert and details below are a sample so you can see what AdLab does. Upload your own photo or video, change the details, and press <b>Analyse my advert</b>.
+  </div>
+
+  <div class="step"><span class="n">Step 1</span><h1>Your advert</h1></div>
+  <form id="form" class="card stack" novalidate>
+    <div class="cols">
+      <div class="stack">
+        <div id="drop" class="drop">
+          <label class="f" for="media">Photo or video</label>
+          <input id="media" type="file" accept="image/*,video/*">
+          <div class="small mute">JPG, PNG, MP4 or MOV. Your file stays on your device.</div>
+        </div>
+        <div id="preview" class="preview"></div>
+      </div>
+      <div class="stack">
+        <div class="cols3">
+          <div><label class="f" for="name">Business name</label><input id="name" type="text" placeholder="e.g. Black Gold Furniture"></div>
+          <div><label class="f" for="product">Product in this advert</label><input id="product" type="text" placeholder="e.g. corner lounge suite"></div>
+          <div><label class="f" for="category">Type of business</label><select id="category"></select></div>
+          <div><label class="f" for="price">Price on the advert <span>(optional)</span></label><input id="price" type="text" placeholder="e.g. From $650"></div>
+          <div><label class="f" for="contact">How customers order</label><input id="contact" type="text" placeholder="WhatsApp number"></div>
+          <div><label class="f" for="logo">Logo <span>(optional)</span></label><input id="logo" type="file" accept="image/*"></div>
+        </div>
+        <div><label class="f" for="caption">Caption you'll post with it <span>(optional)</span></label><textarea id="caption" placeholder="e.g. Lay-by available, free delivery in Harare. WhatsApp to order!"></textarea></div>
+      </div>
+    </div>
+    <div>
+      <label class="f" id="regionsLbl">Where are your customers?</label>
+      <div id="regions" class="chips" role="group" aria-labelledby="regionsLbl"></div>
+    </div>
+    <div class="cols3">
+      <div><label class="f" for="goal">Goal</label><select id="goal"></select></div>
+      <div><label class="f" for="budget">Total ad budget (USD)</label><input id="budget" type="number" min="0" step="1" placeholder="e.g. 100"></div>
+      <div><label class="f" for="days">Campaign length (days) <span>blank = we recommend</span></label><input id="days" type="number" min="1" max="90" placeholder="auto"></div>
+    </div>
+    <div class="row">
+      <button id="analyseBtn" class="btn" type="submit">Analyse my advert</button>
+      <label class="chip" id="aiChip" hidden><input id="useAi" type="checkbox" checked> Deep review with Claude</label>
+      <span id="status" class="small mute" aria-live="polite"></span>
+    </div>
+  </form>
+
+  <div id="report"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+"use strict";
+const D = {"channels":{"tiktok":{"key":"tiktok","name":"TikTok","paid":true,"base_cpm":7.0,"base_ctr":0.01,"min_daily":5.0,"best_for":["awareness","engagement","messages"],"formats":["tiktok"],"vertical_first":true,"ad_tool":"TikTok Promote (in app) or TikTok Ads Manager (Spark Ads)"},"facebook":{"key":"facebook","name":"Facebook","paid":true,"base_cpm":9.0,"base_ctr":0.012,"min_daily":3.0,"best_for":["messages","sales","traffic","awareness"],"formats":["facebook_feed","facebook_story"],"vertical_first":false,"ad_tool":"Meta Ads Manager - Click-to-WhatsApp/Messenger"},"instagram":{"key":"instagram","name":"Instagram","paid":true,"base_cpm":9.5,"base_ctr":0.01,"min_daily":3.0,"best_for":["engagement","sales","awareness","messages"],"formats":["instagram_reel","instagram_feed","instagram_story"],"vertical_first":true,"ad_tool":"Meta Ads Manager (same campaign as Facebook)"},"whatsapp":{"key":"whatsapp","name":"WhatsApp Status & Channels","paid":false,"base_cpm":0.0,"base_ctr":0.0,"min_daily":0.0,"best_for":["messages","sales"],"formats":["whatsapp_status"],"vertical_first":true,"ad_tool":"Post free to Status/Channel; paid reach comes via Click-to-WhatsApp on Meta"},"youtube":{"key":"youtube","name":"YouTube Shorts / In-stream","paid":true,"base_cpm":8.0,"base_ctr":0.006,"min_daily":5.0,"best_for":["awareness","traffic"],"formats":["youtube_short","youtube"],"vertical_first":true,"ad_tool":"Google Ads - Video campaign"},"x":{"key":"x","name":"X (Twitter)","paid":true,"base_cpm":5.0,"base_ctr":0.008,"min_daily":5.0,"best_for":["awareness","traffic"],"formats":["x_post"],"vertical_first":false,"ad_tool":"X Ads"},"linkedin":{"key":"linkedin","name":"LinkedIn","paid":true,"base_cpm":30.0,"base_ctr":0.006,"min_daily":10.0,"best_for":["traffic","sales"],"formats":["linkedin"],"vertical_first":false,"ad_tool":"LinkedIn Campaign Manager"},"pinterest":{"key":"pinterest","name":"Pinterest","paid":true,"base_cpm":6.0,"base_ctr":0.007,"min_daily":5.0,"best_for":["traffic","sales"],"formats":["pinterest"],"vertical_first":true,"ad_tool":"Pinterest Ads"},"snapchat":{"key":"snapchat","name":"Snapchat","paid":true,"base_cpm":5.0,"base_ctr":0.006,"min_daily":5.0,"best_for":["awareness","engagement"],"formats":["snapchat"],"vertical_first":true,"ad_tool":"Snapchat Ads Manager"}},"regions":{"zimbabwe":{"name":"Zimbabwe","cpm_mult":0.12,"currency_note":"USD, EcoCash, InnBucks","reach":{"facebook":1.0,"whatsapp":1.0,"tiktok":0.85,"instagram":0.45,"youtube":0.5,"x":0.35,"linkedin":0.25,"pinterest":0.05,"snapchat":0.1},"peak_times":"12:00-14:00 and 19:00-22:00 CAT; Sunday afternoon is strong","notes":"Data costs are high: keep videos short and light. Trust and payment plans (lay-by) win sales."},"south_africa":{"name":"South Africa","cpm_mult":0.3,"currency_note":"ZAR","reach":{"facebook":0.9,"whatsapp":1.0,"tiktok":0.85,"instagram":0.7,"youtube":0.75,"x":0.5,"linkedin":0.45,"pinterest":0.2,"snapchat":0.2},"peak_times":"12:00-13:30 and 18:30-21:30 SAST; month-end payday weeks convert best","notes":"Payday (25th-1st) drives purchases. Load-shedding hours change when people scroll."},"nigeria":{"name":"Nigeria","cpm_mult":0.12,"currency_note":"NGN","reach":{"facebook":0.85,"whatsapp":1.0,"tiktok":0.8,"instagram":0.8,"youtube":0.6,"x":0.6,"linkedin":0.3,"pinterest":0.05,"snapchat":0.25},"peak_times":"12:00-14:00 and 19:00-23:00 WAT","notes":"Instagram is a major shopping channel; show prices in NGN and offer pay-on-delivery in Lagos/Abuja."},"kenya":{"name":"Kenya","cpm_mult":0.14,"currency_note":"KES, M-Pesa","reach":{"facebook":0.9,"whatsapp":1.0,"tiktok":0.85,"instagram":0.6,"youtube":0.65,"x":0.45,"linkedin":0.3,"pinterest":0.05,"snapchat":0.15},"peak_times":"12:30-14:00 and 19:00-22:00 EAT","notes":"Put the M-Pesa till/paybill number in the ad."},"uk":{"name":"United Kingdom","cpm_mult":0.8,"currency_note":"GBP","reach":{"facebook":0.75,"whatsapp":0.8,"tiktok":0.85,"instagram":0.85,"youtube":0.85,"x":0.5,"linkedin":0.6,"pinterest":0.45,"snapchat":0.5},"peak_times":"07:30-09:00, 12:00-13:00 and 19:00-22:00 GMT/BST","notes":""},"usa":{"name":"United States","cpm_mult":1.0,"currency_note":"USD","reach":{"facebook":0.75,"whatsapp":0.3,"tiktok":0.85,"instagram":0.85,"youtube":0.9,"x":0.5,"linkedin":0.6,"pinterest":0.6,"snapchat":0.55},"peak_times":"11:00-13:00 and 19:00-22:00 local time","notes":""},"diaspora":{"name":"Diaspora (UK, SA, USA, Australia, Botswana)","cpm_mult":0.65,"currency_note":"Show the home-country price in USD plus 'pay from abroad'","reach":{"facebook":1.0,"whatsapp":1.0,"tiktok":0.8,"instagram":0.6,"youtube":0.6,"x":0.3,"linkedin":0.3,"pinterest":0.1,"snapchat":0.1},"peak_times":"Evenings in the target country; Sunday is family/WhatsApp time","notes":"Diaspora buyers pay for family back home. Show delivery photos and accept card / bank transfer."},"global":{"name":"Global / other","cpm_mult":0.6,"currency_note":"USD","reach":{"facebook":0.85,"whatsapp":0.8,"tiktok":0.85,"instagram":0.8,"youtube":0.85,"x":0.5,"linkedin":0.5,"pinterest":0.35,"snapchat":0.35},"peak_times":"12:00-14:00 and 19:00-22:00 local time","notes":""}},"categories":{"furniture":{"name":"Furniture & home decor","keywords":["sofa","couch","lounge","bed","furniture","dining","wardrobe","kitchen","decor","chair"],"purchase_cycle":"considered","channel_fit":{"facebook":1.0,"tiktok":0.9,"whatsapp":1.0,"instagram":0.8,"pinterest":0.7,"youtube":0.5,"x":0.2,"linkedin":0.15,"snapchat":0.2},"segments":[["Young couples setting up a first home","24-34","mixed, women lead the decision",["home decor","weddings","new home","interior design"],"Biggest volume. Want style, payment plans and delivery."],["Established families upgrading","35-55","mixed",["family","home improvement","real estate"],"Higher order value: full lounge/bedroom suites, care about durability."],["Diaspora buying for family back home","28-55","mixed",["expat communities","remittances","home country news"],"Pay from abroad and want proof of delivery. High trust bar, high spend."],["Landlords, Airbnb hosts and small offices","30-60","mixed",["real estate investing","Airbnb","small business"],"Bulk orders and repeat purchases."]],"hooks":["Delivery reveal: truck to living room","Before/after room makeover","'Guess the price' then reveal","What's inside: frame, foam, springs","Customer testimonial in a real home"]},"fashion":{"name":"Fashion, clothing & accessories","keywords":["dress","shoes","fashion","outfit","clothing","wear","bag","jewellery","jewelry","wig","hair"],"purchase_cycle":"impulse","channel_fit":{"instagram":1.0,"tiktok":1.0,"facebook":0.7,"whatsapp":0.8,"pinterest":0.7,"snapchat":0.6,"youtube":0.4,"x":0.3,"linkedin":0.05},"segments":[["Trend-led young women","18-30","female",["fashion","beauty","celebrities","online shopping"],"Respond to try-ons, outfit transitions and drops."],["Young men into streetwear","18-30","male",["sneakers","hip hop","football"],"Respond to fit checks and limited stock."],["Working professionals","28-45","mixed",["business","careers","luxury"],"Value quality and occasion wear."]],"hooks":["Outfit transition on the beat","'3 ways to wear this'","Try-on haul","Limited stock countdown"]},"food":{"name":"Food, restaurant & catering","keywords":["food","restaurant","cake","pizza","chicken","catering","bakery","menu","meal","drink"],"purchase_cycle":"impulse","channel_fit":{"tiktok":1.0,"instagram":0.9,"facebook":0.9,"whatsapp":0.9,"youtube":0.4,"snapchat":0.5,"pinterest":0.3,"x":0.3,"linkedin":0.05},"segments":[["Students and young workers nearby","18-30","mixed",["food","music","nightlife"],"Price- and deal-sensitive, decide fast."],["Families ordering for weekends/events","28-50","mixed",["family","parenting","events"],"Order bigger; respond to combos and catering."],["Office lunch buyers","24-45","mixed",["business","office"],"Want speed and delivery."]],"hooks":["Close-up sizzle/cheese pull in first second","Price + portion reveal","Behind the kitchen","Customer first bite"]},"beauty":{"name":"Beauty, salon & cosmetics","keywords":["salon","makeup","nails","skin","beauty","lashes","spa","barber","cosmetics"],"purchase_cycle":"repeat","channel_fit":{"instagram":1.0,"tiktok":1.0,"facebook":0.8,"whatsapp":0.9,"youtube":0.5,"pinterest":0.5,"snapchat":0.5,"x":0.2,"linkedin":0.05},"segments":[["Young women 18-34","18-34","female",["beauty","makeup","fashion"],"Driven by transformations and creators."],["Professional women 30-50","30-50","female",["wellness","spa","luxury"],"Value results, booking convenience."],["Grooming-focused men","18-40","male",["grooming","fitness"],"Barber cuts, beard care."]],"hooks":["Before/after transformation","Satisfying process close-up","Price list reveal","Client reaction"]},"real_estate":{"name":"Real estate & property","keywords":["house","stand","property","rent","land","apartment","estate","realtor"],"purchase_cycle":"considered","channel_fit":{"facebook":1.0,"whatsapp":1.0,"youtube":0.8,"instagram":0.7,"tiktok":0.7,"linkedin":0.5,"x":0.3,"pinterest":0.2,"snapchat":0.05},"segments":[["First-time buyers","27-40","mixed",["real estate","mortgage","personal finance"],"Need payment plans."],["Diaspora investors","30-60","mixed",["investing","expat communities"],"Want title deeds and proof."],["Investors and landlords","35-65","mixed",["investing","business"],"Care about yield and location."]],"hooks":["Walkthrough tour in 20 seconds","'What $X buys you in <area>'","Drone reveal","Title deeds and payment plan"]},"auto":{"name":"Vehicles, parts & services","keywords":["car","vehicle","tyre","tire","parts","garage","mechanic","auto"],"purchase_cycle":"considered","channel_fit":{"facebook":1.0,"tiktok":0.8,"youtube":0.8,"whatsapp":0.9,"instagram":0.6,"x":0.3,"linkedin":0.2,"pinterest":0.1,"snapchat":0.2},"segments":[["Men 25-50 car owners","25-50","male-leaning",["cars","motorsport","technology"],"Want price and condition."],["Families needing reliable transport","28-50","mixed",["family"],"Value financing and trust."]],"hooks":["Walk-around with price on screen","Engine start sound","Before/after detailing"]},"electronics":{"name":"Phones, electronics & tech","keywords":["phone","laptop","iphone","samsung","tv","solar","inverter","electronics","gadget"],"purchase_cycle":"considered","channel_fit":{"facebook":0.9,"tiktok":0.9,"youtube":0.8,"whatsapp":0.9,"instagram":0.7,"x":0.5,"linkedin":0.3,"pinterest":0.2,"snapchat":0.3},"segments":[["Young tech buyers","18-34","male-leaning",["technology","gaming","mobile phones"],"Compare specs and prices."],["Homeowners needing solar/backup","30-60","mixed",["home improvement","energy"],"Pain-driven: outages."],["Small businesses","25-55","mixed",["small business"],"Bulk, warranty, invoices."]],"hooks":["Unboxing with price","Problem/solution (power cut \u2192 lights stay on)","Spec comparison"]},"services":{"name":"Professional & local services","keywords":["service","cleaning","repair","training","consult","school","tutor","photography","event"],"purchase_cycle":"considered","channel_fit":{"facebook":1.0,"whatsapp":1.0,"linkedin":0.6,"tiktok":0.7,"instagram":0.7,"youtube":0.5,"x":0.3,"pinterest":0.1,"snapchat":0.1},"segments":[["Local households","25-55","mixed",["home","family"],"Want reliability and fair price."],["Small and medium businesses","25-55","mixed",["small business","entrepreneurship"],"Want proof of results."]],"hooks":["Before/after result","Day-in-the-life of the team","Client testimonial","FAQ answered in 15 s"]},"general":{"name":"General retail","keywords":[],"purchase_cycle":"impulse","channel_fit":{"facebook":0.9,"tiktok":0.9,"instagram":0.8,"whatsapp":0.9,"youtube":0.5,"x":0.3,"linkedin":0.2,"pinterest":0.3,"snapchat":0.3},"segments":[["Value shoppers","22-45","mixed",["online shopping","deals"],"Respond to price and offers."],["Gift buyers","25-50","mixed",["gifts","holidays"],"Respond to seasonal hooks."]],"hooks":["Product in use in first second","Price reveal","Customer reaction","Limited offer"]}},"goals":{"messages":"WhatsApp / inbox messages (leads)","sales":"Website or catalogue sales","awareness":"Brand awareness & reach","engagement":"Views, likes, shares & followers","traffic":"Website / link clicks"},"specs":{"tiktok":{"key":"tiktok","label":"TikTok 9:16","width":1080,"height":1920,"max_seconds":180,"ideal_seconds":21,"bottom_safe":0.22,"top_safe":0.1},"instagram_reel":{"key":"instagram_reel","label":"Instagram Reel 9:16","width":1080,"height":1920,"max_seconds":90,"ideal_seconds":20,"bottom_safe":0.22,"top_safe":0.1},"instagram_story":{"key":"instagram_story","label":"Instagram/Facebook Story 9:16","width":1080,"height":1920,"max_seconds":60,"ideal_seconds":15,"bottom_safe":0.18,"top_safe":0.12},"instagram_feed":{"key":"instagram_feed","label":"Instagram feed 4:5","width":1080,"height":1350,"max_seconds":60,"ideal_seconds":20,"bottom_safe":0.0,"top_safe":0.0},"facebook_feed":{"key":"facebook_feed","label":"Facebook feed 4:5","width":1080,"height":1350,"max_seconds":120,"ideal_seconds":20,"bottom_safe":0.0,"top_safe":0.0},"facebook_story":{"key":"facebook_story","label":"Facebook Story/Reel 9:16","width":1080,"height":1920,"max_seconds":60,"ideal_seconds":15,"bottom_safe":0.2,"top_safe":0.1},"square":{"key":"square","label":"Square 1:1 (FB/IG/X/LinkedIn)","width":1080,"height":1080,"max_seconds":60,"ideal_seconds":20,"bottom_safe":0.0,"top_safe":0.0},"whatsapp_status":{"key":"whatsapp_status","label":"WhatsApp Status 9:16","width":1080,"height":1920,"max_seconds":60,"ideal_seconds":20,"bottom_safe":0.1,"top_safe":0.08},"youtube_short":{"key":"youtube_short","label":"YouTube Short 9:16","width":1080,"height":1920,"max_seconds":60,"ideal_seconds":25,"bottom_safe":0.2,"top_safe":0.08},"youtube":{"key":"youtube","label":"YouTube 16:9","width":1920,"height":1080,"max_seconds":600,"ideal_seconds":30,"bottom_safe":0.0,"top_safe":0.0},"x_post":{"key":"x_post","label":"X (Twitter) 16:9","width":1600,"height":900,"max_seconds":140,"ideal_seconds":20,"bottom_safe":0.0,"top_safe":0.0},"linkedin":{"key":"linkedin","label":"LinkedIn 1.91:1","width":1200,"height":627,"max_seconds":600,"ideal_seconds":30,"bottom_safe":0.0,"top_safe":0.0},"pinterest":{"key":"pinterest","label":"Pinterest 2:3","width":1000,"height":1500,"max_seconds":60,"ideal_seconds":15,"bottom_safe":0.0,"top_safe":0.0},"snapchat":{"key":"snapchat","label":"Snapchat 9:16","width":1080,"height":1920,"max_seconds":60,"ideal_seconds":10,"bottom_safe":0.15,"top_safe":0.1}},"actions":{"enhance":"Auto-correct exposure, contrast and colour","sharpen":"Sharpen","reformat":"Make vertical / per-platform sizes (blurred fill, nothing cropped)","upscale":"Upscale to platform resolution","trim":"Trim video to the ideal length for each platform","hook_text":"Add a bold text hook for the first 3 seconds","price_cta":"Add price + call-to-action banner","watermark":"Add brand name / logo","normalize_audio":"Normalise loudness to -14 LUFS"}};
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money = (n, dp = 2) => "$" + Number(n).toLocaleString("en-US", {minimumFractionDigits: dp, maximumFractionDigits: dp});
+const clamp = (x) => Math.max(0, Math.min(100, x));
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+const S = { file: null, kind: null, url: null, el: null, logo: null, media: null, report: null, outputs: [], isExample: false };
+const cap = { sample: null, downloads: null, images: null };
+
+/* ------------------------------------------------------------------ media */
+
+function loadImage(url) {
+  return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error("This image could not be opened. Try a JPG or PNG.")); i.src = url; });
+}
+function loadVideo(url) {
+  return new Promise((res, rej) => {
+    const v = document.createElement("video");
+    v.muted = true; v.playsInline = true; v.preload = "auto"; v.crossOrigin = "anonymous";
+    v.onloadeddata = () => res(v);
+    v.onerror = () => rej(new Error("This video could not be opened in your browser. Try an MP4 (H.264) file."));
+    v.src = url;
+  });
+}
+function seek(v, t) {
+  return new Promise((res) => {
+    const done = () => { v.removeEventListener("seeked", done); res(); };
+    v.addEventListener("seeked", done);
+    v.currentTime = Math.max(0, Math.min(t, (v.duration || 0) - 0.05));
+    setTimeout(done, 3000);
+  });
+}
+function dims(el) { return el.tagName === "VIDEO" ? [el.videoWidth, el.videoHeight] : [el.naturalWidth, el.naturalHeight]; }
+function canvas(w, h) { const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; }
+function snapshot(el, maxSide) {
+  const [w, h] = dims(el); const k = Math.min(1, maxSide / Math.max(w, h));
+  const c = canvas(w * k, h * k); c.getContext("2d").drawImage(el, 0, 0, c.width, c.height); return c;
+}
+function gray(el, n) {
+  const c = canvas(n, n); const x = c.getContext("2d", {willReadFrequently: true}); x.drawImage(el, 0, 0, n, n);
+  const d = x.getImageData(0, 0, n, n).data; const g = new Float32Array(n * n);
+  for (let i = 0; i < n * n; i++) g[i] = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
+  return g;
+}
+const meanAbsDiff = (a, b) => { let s = 0; for (let i = 0; i < a.length; i++) s += Math.abs(a[i] - b[i]); return s / a.length; };
+
+// Same measurements as the Python version (adlab/media.py), on a <=640px copy.
+function frameMetrics(el) {
+  const c = snapshot(el, 640); const w = c.width, h = c.height;
+  const d = c.getContext("2d", {willReadFrequently: true}).getImageData(0, 0, w, h).data;
+  const n = w * h, L = new Float32Array(n);
+  let sl = 0, sl2 = 0, srg = 0, srg2 = 0, syb = 0, syb2 = 0, ssat = 0;
+  for (let i = 0; i < n; i++) {
+    const r = d[i * 4], g = d[i * 4 + 1], b = d[i * 4 + 2];
+    const l = 0.299 * r + 0.587 * g + 0.114 * b; L[i] = l; sl += l; sl2 += l * l;
+    const rg = Math.abs(r - g), yb = Math.abs(0.5 * (r + g) - b);
+    srg += rg; srg2 += rg * rg; syb += yb; syb2 += yb * yb;
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b); ssat += mx ? (mx - mn) / mx * 255 : 0;
+  }
+  const ml = sl / n, mrg = srg / n, myb = syb / n;
+  const sdl = Math.sqrt(Math.max(0, sl2 / n - ml * ml));
+  const sdrg = Math.sqrt(Math.max(0, srg2 / n - mrg * mrg)), sdyb = Math.sqrt(Math.max(0, syb2 / n - myb * myb));
+  const colorfulness = Math.sqrt(sdrg ** 2 + sdyb ** 2) + 0.3 * Math.sqrt(mrg ** 2 + myb ** 2);
+  let lap = 0, lap2 = 0, ln = 0, edges = 0, cEdges = 0, cN = 0;
+  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+    const i = y * w + x;
+    const v = -4 * L[i] + L[i - 1] + L[i + 1] + L[i - w] + L[i + w]; lap += v; lap2 += v * v; ln++;
+    const gx = (L[i + 1] - L[i - 1]) / 2, gy = (L[i + w] - L[i - w]) / 2;
+    const e = Math.hypot(gx, gy) > 40 ? 1 : 0; edges += e;
+    if (y >= h / 4 && y < 3 * h / 4 && x >= w / 4 && x < 3 * w / 4) { cEdges += e; cN++; }
+  }
+  const lm = lap / ln, detail = edges / ln;
+  return { brightness: ml, contrast: sdl, colorfulness, sharpness: lap2 / ln - lm * lm, saturation: ssat / n,
+           detail, center_focus: (cN ? cEdges / cN : 0) / (detail + 1e-6) };
+}
+const avgMetrics = (fs) => Object.fromEntries(Object.keys(fs[0]).map((k) => [k, fs.reduce((s, f) => s + f[k], 0) / fs.length]));
+
+async function loudness(file) {
+  if (file.size > 150e6) return { has: true, lufs: null };
+  try {
+    const buf = await file.arrayBuffer();
+    const ac = new OfflineAudioContext(1, 1, 44100);
+    const audio = await ac.decodeAudioData(buf);
+    const ch = audio.getChannelData(0), block = Math.floor(audio.sampleRate * 0.4);
+    let sum = 0, cnt = 0, peak = 0;
+    for (let i = 0; i + block <= ch.length; i += block) {
+      let e = 0; for (let j = i; j < i + block; j++) { e += ch[j] * ch[j]; peak = Math.max(peak, Math.abs(ch[j])); }
+      e /= block; if (10 * Math.log10(e + 1e-12) > -70) { sum += e; cnt++; }
+    }
+    if (!cnt || peak < 0.003) return { has: false, lufs: null };
+    return { has: true, lufs: 10 * Math.log10(sum / cnt) - 0.7 };
+  } catch { return { has: null, lufs: null }; }
+}
+
+async function analyseMedia(progress) {
+  const el = S.el, [w, h] = dims(el);
+  const m = { kind: S.kind, width: w, height: h, aspect: w / h, duration: 0, has_audio: false, loudness: null,
+              scene_cuts: 0, cuts_per_10s: 0, opening_motion: 0, frames: [], thumbs: [] };
+  m.orientation = m.aspect < 0.9 ? "vertical" : m.aspect > 1.1 ? "horizontal" : "square";
+  if (S.kind === "image") {
+    m.frames = [frameMetrics(el)]; m.thumbs = [snapshot(el, 768)];
+  } else {
+    const d = el.duration; m.duration = isFinite(d) ? d : 0;
+    const times = [0.3, ...[1, 2, 3, 4, 5].map((i) => m.duration * i / 6)];
+    for (const [i, t] of times.entries()) {
+      progress(`Looking at the video (${i + 1}/${times.length})`);
+      await seek(el, t); m.frames.push(frameMetrics(el)); m.thumbs.push(snapshot(el, 768));
+    }
+    progress("Checking the opening seconds");
+    let prev = null, diffs = [];
+    for (let t = 0; t <= Math.min(3, m.duration); t += 0.2) { await seek(el, t); const g = gray(el, 64); if (prev) diffs.push(meanAbsDiff(prev, g)); prev = g; }
+    m.opening_motion = diffs.length ? diffs.reduce((a, b) => a + b, 0) / diffs.length : 0;
+    const step = Math.max(0.25, m.duration / 200); prev = null; let cuts = 0;
+    for (let t = 0, k = 0; t < m.duration; t += step, k++) {
+      if (k % 10 === 0) progress(`Counting scene changes (${Math.round(t / m.duration * 100)}%)`);
+      await seek(el, t); const g = gray(el, 64); if (prev && meanAbsDiff(prev, g) > 32) cuts++; prev = g;
+    }
+    m.scene_cuts = cuts; m.cuts_per_10s = m.duration ? cuts / m.duration * 10 : 0;
+    progress("Measuring the sound");
+    const a = await loudness(S.file); m.has_audio = a.has !== false; m.loudness = a.lufs;
+    await seek(el, 0);
+  }
+  m.avg = avgMetrics(m.frames);
+  return m;
+}
+
+/* -------------------------------------------------------------- virality */
+// Port of adlab/virality.py: keep the two in step.
+const CTA_WORDS = ["order", "buy", "shop", "call", "whatsapp", "dm", "message", "book", "visit", "click", "tap", "get yours", "inbox", "link in bio", "save", "share"];
+function band(v, lo, hi, soft) { if (v >= lo && v <= hi) return 100; const dist = v < lo ? lo - v : v - hi; return Math.max(0, 100 * (1 - dist / soft)); }
+function viralityScore(m, adText, price) {
+  const a = m.avg, first = m.frames[0], video = m.kind === "video", F = [];
+  const R = (text, priority, action = null) => ({ text, priority, action });
+  const stop = 0.35 * clamp(first.contrast / 65 * 100) + 0.35 * clamp(first.colorfulness / 60 * 100) + 0.3 * band(first.brightness, 85, 185, 70);
+  let hook, detail;
+  if (video) { hook = 0.55 * stop + 0.45 * band(m.opening_motion, 6, 40, 25); detail = `First-frame contrast ${first.contrast.toFixed(0)}, colour ${first.colorfulness.toFixed(0)}, opening motion ${m.opening_motion.toFixed(1)}.`; }
+  else { hook = 0.8 * stop + 0.2 * clamp(first.center_focus / 1.4 * 100); detail = `Contrast ${first.contrast.toFixed(0)}, colour ${first.colorfulness.toFixed(0)}, subject focus ${first.center_focus.toFixed(2)}.`; }
+  let f = { name: "Hook (first second)", score: hook, weight: 0.25, detail, recs: [] };
+  if (hook < 70) f.recs.push(R("Open with your strongest shot and a bold text hook in the first second (a question or the price). Viewers decide in under 2 seconds.", "high", "hook_text"));
+  if (video && m.opening_motion < 4) f.recs.push(R("The opening is static. Start mid-action: movement, a reveal, a hand touching the product.", "high"));
+  F.push(f);
+
+  const fmt = { vertical: 100, square: 65, horizontal: 35 }[m.orientation];
+  f = { name: "Format (vertical 9:16)", score: fmt, weight: 0.15, detail: `${m.width}×${m.height} (${m.orientation}).`, recs: [] };
+  if (m.orientation !== "vertical") f.recs.push(R("TikTok, Reels, Shorts and Status are vertical. AdLab makes 9:16 versions on a blurred background so nothing is cut off. Film vertically next time.", "high", "reformat"));
+  if (Math.min(m.width, m.height) < 720) { f.recs.push(R("Resolution is low (under 720p). Shoot at 1080p or higher.", "medium")); f.score = Math.min(f.score, 60); }
+  F.push(f);
+
+  if (video) {
+    const d = m.duration;
+    f = { name: "Length", score: band(d, 8, 30, 45), weight: 0.12, detail: `${d.toFixed(1)} s long.`, recs: [] };
+    if (d > 30) f.recs.push(R(`At ${d.toFixed(0)} s it is long for a feed ad. Cut to 15-30 s; AdLab can trim it and keep the opening.`, d > 60 ? "high" : "medium", "trim"));
+    else if (d < 6) f.recs.push(R("Very short. 9-20 s lets you show the product, proof and the offer.", "low"));
+    F.push(f);
+    f = { name: "Pacing (cuts)", score: band(m.cuts_per_10s, 1.5, 6, 4), weight: 0.1, detail: `${m.scene_cuts} cuts, ${m.cuts_per_10s.toFixed(1)} per 10 s.`, recs: [] };
+    if (m.cuts_per_10s < 1.5) f.recs.push(R("Few cuts. Change angle or shot every 2-3 seconds (wide, close-up, detail, reaction) to hold attention.", "medium"));
+    else if (m.cuts_per_10s > 6) f.recs.push(R("Very fast cutting can feel chaotic; let key shots breathe.", "low"));
+    F.push(f);
+    let snd, sd;
+    if (!m.has_audio) { snd = 30; sd = "No sound found."; }
+    else if (m.loudness == null) { snd = 60; sd = "Sound present; loudness not measured."; }
+    else { snd = band(m.loudness, -16, -10, 12); sd = `Loudness about ${m.loudness.toFixed(0)} LUFS (target -14).`; }
+    f = { name: "Sound", score: snd, weight: 0.1, detail: sd, recs: [] };
+    if (!m.has_audio) f.recs.push(R("Add a trending sound or voice-over in the TikTok/Instagram editor: sound-on videos get more reach.", "high"));
+    else if (snd < 80) f.recs.push(R("Volume is uneven or off target. AdLab will even it out.", "medium", "normalize_audio"));
+    F.push(f);
+  }
+
+  const sharp = clamp(a.sharpness / 300 * 100), expo = band(a.brightness, 90, 180, 70), con = clamp(a.contrast / 55 * 100);
+  const q = 0.4 * sharp + 0.35 * expo + 0.25 * con;
+  f = { name: "Picture quality", score: q, weight: video ? 0.15 : 0.25, detail: `Brightness ${a.brightness.toFixed(0)}, contrast ${a.contrast.toFixed(0)}, sharpness ${a.sharpness.toFixed(0)}.`, recs: [] };
+  if (expo < 80 || con < 75) {
+    const what = a.brightness < 90 ? "too dark" : a.brightness > 180 ? "too bright" : "flat";
+    f.recs.push(R(`The picture looks ${what}. AdLab will correct exposure, contrast and colour.`, expo < 50 ? "high" : "medium", "enhance"));
+  }
+  if (sharp < 60) f.recs.push(R("Slightly soft or blurry. AdLab can sharpen photos; next time wipe the lens and tap to focus.", "medium", video ? null : "sharpen"));
+  F.push(f);
+
+  const col = clamp(a.colorfulness / 55 * 100);
+  f = { name: "Colour & eye-catch", score: col, weight: 0.08, detail: `Colourfulness ${a.colorfulness.toFixed(0)}, saturation ${a.saturation.toFixed(0)}.`, recs: [] };
+  if (col < 60) f.recs.push(R("Colours are dull. A warmer, richer grade stands out in the feed.", "medium", "enhance"));
+  F.push(f);
+
+  const text = `${adText} ${price}`.toLowerCase();
+  const hasPrice = !!price.trim() || /(\$|usd|zar|r\s?\d|ksh|₦|£|€)\s?\d|\d+\s?(usd|dollars)/.test(text);
+  const hasCta = CTA_WORDS.some((w) => text.includes(w)), hasQ = text.includes("?");
+  f = { name: "Offer & call to action", score: 30 + 35 * hasPrice + 25 * hasCta + 10 * hasQ, weight: video ? 0.15 : 0.27,
+        detail: `Price shown: ${hasPrice ? "yes" : "no"}. Call to action: ${hasCta ? "yes" : "no"}.`, recs: [] };
+  if (!hasPrice) f.recs.push(R("Show the price, or 'From $X'. 'DM for price' loses most buyers. Fill in the price and AdLab puts it on the advert.", "high", "price_cta"));
+  if (!hasCta) f.recs.push(R("Tell people exactly what to do: 'Order on WhatsApp 07xx xxx xxx'. AdLab adds a call-to-action banner.", "high", "price_cta"));
+  f.recs.push(R("Add your brand name or logo so every share builds recognition.", "low", "watermark"));
+  F.push(f);
+
+  const tw = F.reduce((s, x) => s + x.weight, 0);
+  const score = Math.round(F.reduce((s, x) => s + x.score * x.weight, 0) / tw);
+  const grade = score >= 85 ? "A" : score >= 72 ? "B" : score >= 58 ? "C" : score >= 45 ? "D" : "E";
+  const verdict = { A: "Strong viral potential. Post it, and put budget behind it once the first numbers confirm.",
+    B: "Good. Apply the fixes below and it is ready to boost.", C: "Average. It will get some reach; the fixes below should lift it noticeably.",
+    D: "Weak. Apply the fixes and think about re-shooting the opening.", E: "Unlikely to perform as it is. Re-shoot using the hook ideas below." }[grade];
+  const order = { high: 0, medium: 1, low: 2 };
+  const recs = [...F].sort((x, y) => x.score - y.score).flatMap((x) => x.recs).sort((x, y) => order[x.priority] - order[y.priority]);
+  return { score, grade, verdict, factors: F, recommendations: recs };
+}
+
+/* ---------------------------------------------------------------- market */
+function detectCategory(text) {
+  text = (text || "").toLowerCase(); let best = "general", hits = 0;
+  for (const [k, c] of Object.entries(D.categories)) { const n = c.keywords.filter((w) => text.includes(w)).length; if (n > hits) { best = k; hits = n; } }
+  return best;
+}
+function audience(category, regions) {
+  const cat = D.categories[category] || D.categories.general;
+  let segs = cat.segments.map(([name, age, gender, interests, why]) => ({ name, age, gender, interests, why }));
+  if (!regions.includes("diaspora")) segs = segs.filter((s) => !/diaspora/i.test(s.name)).length ? segs.filter((s) => !/diaspora/i.test(s.name)) : segs;
+  const regs = (regions.map((r) => D.regions[r]).filter(Boolean));
+  return { name: cat.name, cycle: cat.purchase_cycle, segments: segs, hooks: cat.hooks, regions: regs.length ? regs : [D.regions.global] };
+}
+
+/* --------------------------------------------------------------- planner */
+// Port of adlab/planner.py: keep the two in step.
+const RESULT_RATE = { impulse: 0.03, repeat: 0.025, considered: 0.012 };
+const GOAL_RATE = { messages: 0.35, traffic: 1, sales: 1, awareness: 1, engagement: 3 };
+function plan({ budget, category, regions, goal, days, orientation, viral }) {
+  const cat = D.categories[category] || D.categories.general;
+  const regs = regions.map((r) => D.regions[r]).filter(Boolean); if (!regs.length) regs.push(D.regions.global);
+  const cycle = cat.purchase_cycle, daysFixed = !!days;
+  days = days || (["awareness", "engagement"].includes(goal) ? 7 : { impulse: 10, repeat: 14, considered: 21 }[cycle]);
+  const rows = Object.values(D.channels).map((ch) => {
+    const reach = regs.reduce((s, r) => s + (r.reach[ch.key] ?? 0.2), 0) / regs.length;
+    const fit = cat.channel_fit[ch.key] ?? 0.3, gf = ch.best_for.includes(goal) ? 1 : 0.6;
+    const cr = ch.vertical_first === (orientation === "vertical") ? 1 : 0.92;
+    return [reach * fit * gf * cr, ch];
+  }).sort((a, b) => b[0] - a[0]);
+  const organic = rows.filter(([s, c]) => !c.paid && s > 0.4).map(([, c]) => c);
+  const paid = rows.filter(([, c]) => c.paid);
+  let daily = budget / days; const chosen = [], skipped = [];
+  const need = (extra) => chosen.reduce((s, [, c]) => s + c.min_daily, 0) + extra;
+  for (const [s, ch] of paid) {
+    if (s < 0.25 || chosen.length >= 4) break;
+    if (need(ch.min_daily) <= daily || !chosen.length) { chosen.push([s, ch]); continue; }
+    const n = need(ch.min_daily);
+    if (s >= 0.5 && !daysFixed && Math.floor(budget / n) >= Math.max(5, Math.floor(days * 0.6))) { days = Math.floor(budget / n); daily = budget / days; chosen.push([s, ch]); continue; }
+    const weaker = chosen.filter(([ws]) => ws < s * 0.8);
+    while (weaker.length && need(ch.min_daily) > daily) {
+      const drop = weaker.reduce((a, b) => (a[0] <= b[0] ? a : b)); weaker.splice(weaker.indexOf(drop), 1); chosen.splice(chosen.indexOf(drop), 1);
+      skipped.push(`${drop[1].name} was left out so the budget can feed ${ch.name}; add budget to run both.`);
+    }
+    if (need(ch.min_daily) <= daily) chosen.push([s, ch]);
+    else if (s >= 0.5) skipped.push(`${ch.name} is a strong fit but needs about $${ch.min_daily.toFixed(0)}/day. Add roughly $${((need(ch.min_daily) - daily) * days).toFixed(0)} to the budget (or shorten the campaign) to include it; until then, post there for free.`);
+  }
+  if (chosen.length && daily < chosen[0][1].min_daily) { days = Math.max(3, Math.floor(budget / chosen[0][1].min_daily)); daily = budget / days; }
+  const ws = chosen.reduce((s, [x]) => s + x, 0) || 1;
+  const cpmMult = regs.reduce((s, r) => s + r.cpm_mult, 0) / regs.length, quality = 0.7 + 0.6 * (viral / 100);
+  const floor = chosen.reduce((s, [, c]) => s + c.min_daily, 0) * days, spare = Math.max(0, budget - floor);
+  const channels = chosen.map(([s, ch]) => {
+    const spend = floor <= budget ? ch.min_daily * days + spare * s / ws : budget * s / ws;
+    const cpm = ch.base_cpm * cpmMult / quality, imp = cpm ? spend / cpm * 1000 : 0;
+    let results = imp * ch.base_ctr * quality * (GOAL_RATE[goal] ?? 1); if (goal === "sales") results *= RESULT_RATE[cycle];
+    return { key: ch.key, name: ch.name, share: Math.round(spend / budget * 100), budget: spend, daily: spend / days, reach: Math.round(imp / 1.8),
+             results: `${Math.floor(results * 0.6).toLocaleString()}-${Math.ceil(results * 1.4).toLocaleString()}`, how: ch.ad_tool, formats: ch.formats };
+  });
+  const test = Math.min(4, Math.max(2, Math.floor(days / 4)));
+  return { budget, days, daily: budget / days, goal: D.goals[goal], resultWord: { messages: "conversations", sales: "sales", traffic: "link clicks", awareness: "clicks", engagement: "engagements" }[goal],
+    channels, organic, skipped, times: regs.map((r) => r.peak_times),
+    phases: [
+      { name: "Test", days: `1-${test}`, spend: budget * 0.3, what: "Run 3-5 versions (different hooks or thumbnails) at equal budget. Don't touch them for 72 hours." },
+      { name: "Cut", days: `${test + 1}`, spend: 0, what: "Switch off anything costing 50% more per result than the average, or with under 1% click rate." },
+      { name: "Scale", days: `${test + 1}-${days}`, spend: budget * 0.7, what: "Move the rest of the budget to the 1-2 winners. Raise budgets by at most 20-30% a day." }] };
+}
+
+/* ------------------------------------------------------------ rendering */
+const FONT = '800 {s}px "Bricolage Grotesque", "Arial Black", system-ui, sans-serif';
+const font = (s) => FONT.replace("{s}", Math.round(s));
+function wrap(ctx, text, maxW) {
+  text = text.replace(/(\d) (?=\d)/g, "$1 ");
+  const words = text.split(" ").filter(Boolean), lines = []; let cur = "";
+  for (const w of words) { const t = cur ? cur + " " + w : w; if (ctx.measureText(t).width <= maxW || !cur) cur = t; else { lines.push(cur); cur = w; } }
+  if (cur) lines.push(cur); return lines;
+}
+function fitText(ctx, text, maxW, maxLines, start, min = 18) {
+  for (let n = 1; n <= maxLines; n++) {
+    const floor = n < maxLines ? Math.floor(start * 0.65) : min;
+    for (let s = start; s >= floor; s -= 3) { ctx.font = font(s); const L = wrap(ctx, text, maxW); if (L.length <= n && L.every((l) => ctx.measureText(l).width <= maxW)) return [s, L]; }
+  }
+  ctx.font = font(min); return [min, wrap(ctx, text, maxW).slice(0, maxLines)];
+}
+function rrect(ctx, x, y, w, h, r) { ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h); }
+function textBlock(ctx, lines, size, cx, y, fill, stroke = 0) {
+  ctx.font = font(size); ctx.textBaseline = "top"; ctx.textAlign = "center"; const lh = Math.round(size * 1.15);
+  for (const l of lines) { if (stroke) { ctx.lineWidth = stroke; ctx.strokeStyle = "rgba(0,0,0,.6)"; ctx.lineJoin = "round"; ctx.strokeText(l, cx, y); } ctx.fillStyle = fill; ctx.fillText(l, cx, y); y += lh; }
+  return y;
+}
+function persistentOverlay(W, H, spec, b, actions) {
+  const c = canvas(W, H), ctx = c.getContext("2d"), unit = Math.min(W, H); let used = false;
+  if (actions.has("watermark") && (b.brand || b.logo)) {
+    used = true; const pad = unit * 0.035; let x = pad; const y = H * spec.top_safe + pad;
+    if (b.logo) { const [lw, lh] = dims(b.logo), k = unit * 0.16 / Math.max(lw, lh); ctx.drawImage(b.logo, x, y, lw * k, lh * k); x += lw * k + pad / 2; }
+    if (b.brand) { const s = unit * 0.04; ctx.font = font(s); ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.lineWidth = s * 0.14; ctx.strokeStyle = "rgba(0,0,0,.55)"; ctx.lineJoin = "round"; ctx.strokeText(b.brand, x, y + 4); ctx.fillStyle = "rgba(255,255,255,.94)"; ctx.fillText(b.brand, x, y + 4); }
+  }
+  if (actions.has("price_cta") && (b.price || b.cta)) {
+    used = true; const bw = W * 0.86, mb = H * spec.bottom_safe + unit * 0.04, ps = unit * 0.075;
+    let cs = 0, cl = []; if (b.cta) [cs, cl] = fitText(ctx, b.cta, bw - 40, 2, unit * 0.045);
+    const ph = b.price ? ps * 1.3 : 0, ch = cs * 1.2 * cl.length, bh = ph + ch + unit * 0.05;
+    const x0 = (W - bw) / 2, y1 = H - mb, y0 = y1 - bh;
+    ctx.fillStyle = "rgba(0,0,0,.74)"; rrect(ctx, x0, y0, bw, bh, unit * 0.03); ctx.fill();
+    ctx.fillStyle = b.color; rrect(ctx, x0, y0, bw, 8, 4); ctx.fill();
+    let y = y0 + unit * 0.025; if (b.price) y = textBlock(ctx, [b.price], ps, W / 2, y, b.color);
+    if (cl.length) textBlock(ctx, cl, cs, W / 2, y, "#fff");
+  }
+  return used ? c : null;
+}
+function hookOverlay(W, H, spec, b) {
+  if (!b.hook) return null;
+  const c = canvas(W, H), ctx = c.getContext("2d"), unit = Math.min(W, H);
+  const [s, L] = fitText(ctx, b.hook.toUpperCase(), W * 0.84, 3, unit * 0.085);
+  const y = H * Math.max(spec.top_safe, 0.06) + unit * 0.12, lh = Math.round(s * 1.15), bh = lh * L.length + unit * 0.04;
+  ctx.fillStyle = "rgba(255,255,255,.92)"; rrect(ctx, W * 0.05, y - unit * 0.02, W * 0.9, bh, unit * 0.03); ctx.fill();
+  textBlock(ctx, L, s, W / 2, y, "#111");
+  return c;
+}
+function drawFit(ctx, src, sw, sh, W, H, mode, tiny) {
+  if (mode === "crop") {
+    const k = Math.max(W / sw, H / sh), dw = sw * k, dh = sh * k; ctx.drawImage(src, (W - dw) / 2, (H - dh) * 0.45, dw, dh); return;
+  }
+  // Blurred fill: shrink a cover-crop to a few dozen pixels, then stretch it back up.
+  const t = tiny.getContext("2d"), k = Math.max(tiny.width / sw, tiny.height / sh), dw = sw * k, dh = sh * k;
+  t.drawImage(src, (tiny.width - dw) / 2, (tiny.height - dh) / 2, dw, dh);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high"; ctx.drawImage(tiny, 0, 0, W, H);
+  ctx.fillStyle = "rgba(0,0,0,.38)"; ctx.fillRect(0, 0, W, H);
+  const f = Math.min(W / sw, H / sh), fw = sw * f, fh = sh * f; ctx.drawImage(src, (W - fw) / 2, (H - fh) / 2, fw, fh);
+}
+const aspectClose = (m, spec) => Math.abs(m.aspect - spec.width / spec.height) / (spec.width / spec.height) < 0.12;
+
+// Photo fixes, matching formats.py: tone stretch, brightness, colour, contrast, then unsharp mask.
+function enhanceImage(el, m, actions) {
+  const [w, h] = dims(el), c = canvas(w, h), ctx = c.getContext("2d", {willReadFrequently: true}); ctx.drawImage(el, 0, 0);
+  if (!actions.has("enhance") && !actions.has("sharpen")) return c;
+  const img = ctx.getImageData(0, 0, w, h), d = img.data, n = w * h, a = m.avg;
+  if (actions.has("enhance")) {
+    const hist = new Uint32Array(256); for (let i = 0; i < n; i++) hist[Math.round(0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2])]++;
+    let lo = 0, hi = 255, acc = 0; while (lo < 255 && (acc += hist[lo]) < n * 0.005) lo++; acc = 0; while (hi > 0 && (acc += hist[hi]) < n * 0.005) hi--;
+    const stretch = hi > lo ? 255 / (hi - lo) : 1;
+    const bright = a.brightness < 95 ? Math.min(1.35, 110 / Math.max(a.brightness, 30)) : a.brightness > 185 ? 0.92 : 1;
+    const sat = a.colorfulness < 45 ? 1.18 : 1.08, con = 1.06, mean = a.brightness;
+    for (let i = 0; i < n; i++) {
+      let r = d[i * 4], g = d[i * 4 + 1], b = d[i * 4 + 2];
+      r = 0.4 * r + 0.6 * (r - lo) * stretch; g = 0.4 * g + 0.6 * (g - lo) * stretch; b = 0.4 * b + 0.6 * (b - lo) * stretch;
+      r *= bright; g *= bright; b *= bright;
+      const l = 0.299 * r + 0.587 * g + 0.114 * b; r = l + (r - l) * sat; g = l + (g - l) * sat; b = l + (b - l) * sat;
+      d[i * 4] = mean + (r - mean) * con; d[i * 4 + 1] = mean + (g - mean) * con; d[i * 4 + 2] = mean + (b - mean) * con;
+    }
+  }
+  if (actions.has("sharpen")) {
+    const src = new Uint8ClampedArray(d), bl = new Float32Array(n * 3), tmp = new Float32Array(n * 3), r = 2;
+    for (let pass = 0; pass < 2; pass++) {
+      const from = pass ? tmp : null;
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) for (let k = 0; k < 3; k++) {
+        let s = 0, cnt = 0;
+        if (pass === 0) { for (let dx = -r; dx <= r; dx++) { const xx = x + dx; if (xx >= 0 && xx < w) { s += src[(y * w + xx) * 4 + k]; cnt++; } } tmp[(y * w + x) * 3 + k] = s / cnt; }
+        else { for (let dy = -r; dy <= r; dy++) { const yy = y + dy; if (yy >= 0 && yy < h) { s += from[(yy * w + x) * 3 + k]; cnt++; } } bl[(y * w + x) * 3 + k] = s / cnt; }
+      }
+    }
+    for (let i = 0; i < n; i++) for (let k = 0; k < 3; k++) { const v = src[i * 4 + k], diff = v - bl[i * 3 + k]; if (Math.abs(diff) > 3) d[i * 4 + k] = v + diff * 0.9; }
+  }
+  ctx.putImageData(img, 0, 0); return c;
+}
+
+async function renderImages(targets, actions, b, progress) {
+  progress("Applying fixes"); await sleep(30);
+  const m = S.media, base = enhanceImage(S.el, m, actions), [sw, sh] = [base.width, base.height], out = [];
+  for (const key of targets) {
+    const spec = D.specs[key]; progress(`Making ${spec.label}`); await sleep(10);
+    const c = canvas(spec.width, spec.height), ctx = c.getContext("2d");
+    drawFit(ctx, base, sw, sh, spec.width, spec.height, aspectClose(m, spec) ? "crop" : "blur", canvas(spec.width / 40, spec.height / 40));
+    for (const ov of [actions.has("hook_text") ? hookOverlay(spec.width, spec.height, spec, b) : null, persistentOverlay(spec.width, spec.height, spec, b, actions)]) if (ov) ctx.drawImage(ov, 0, 0);
+    const blob = await new Promise((r) => c.toBlob(r, "image/jpeg", 0.92));
+    out.push({ key, label: spec.label, blob, name: `${slug()}_${key}.jpg`, type: "image" });
+  }
+  return out;
+}
+
+function recorderType() {
+  const types = ["video/mp4;codecs=avc1.42E028,mp4a.40.2", "video/mp4;codecs=avc1,mp4a", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
+  return typeof MediaRecorder !== "undefined" ? types.find((t) => MediaRecorder.isTypeSupported(t)) : null;
+}
+function supportsCanvasFilter() { try { const x = canvas(2, 2).getContext("2d"); x.filter = "blur(1px)"; return x.filter === "blur(1px)"; } catch { return false; } }
+
+// Videos are re-recorded in real time: one playback feeds every chosen size at once.
+async function renderVideos(targets, actions, b, scale, progress) {
+  const mime = recorderType(); if (!mime) throw new Error("Your browser can't record video. Use Chrome, Edge or Safari on a computer or phone.");
+  const ext = mime.startsWith("video/mp4") ? "mp4" : "webm", m = S.media;
+  const ac = new (window.AudioContext || window.webkitAudioContext)(); try { await ac.resume(); } catch {}
+  const v = document.createElement("video"); v.playsInline = true; v.preload = "auto"; v.src = S.url;
+  await new Promise((res, rej) => { v.onloadeddata = res; v.onerror = () => rej(new Error("The video could not be loaded for rendering.")); });
+  let audioTrack = null;
+  if (m.has_audio !== false) {
+    try {
+      const src = ac.createMediaElementSource(v), dest = ac.createMediaStreamDestination();
+      if (actions.has("normalize_audio")) {
+        const comp = ac.createDynamicsCompressor(); comp.threshold.value = -24; comp.ratio.value = 4; comp.attack.value = 0.01; comp.release.value = 0.25;
+        const gain = ac.createGain(); const L = m.loudness; gain.gain.value = L == null ? 1.4 : Math.min(4, Math.max(0.5, Math.pow(10, (-14 - L + 6) / 20)));
+        src.connect(comp).connect(gain).connect(dest);
+      } else src.connect(dest);
+      audioTrack = dest.stream.getAudioTracks()[0] || null;
+    } catch { audioTrack = null; }
+  }
+  if (!audioTrack) v.muted = true;
+  const filter = actions.has("enhance") && supportsCanvasFilter()
+    ? `brightness(${m.avg.brightness < 90 ? 1.12 : m.avg.brightness > 185 ? 0.94 : 1}) contrast(${m.avg.contrast < 45 ? 1.12 : 1.04}) saturate(${m.avg.colorfulness < 45 ? 1.25 : 1.1})` : "none";
+  const sw = v.videoWidth, sh = v.videoHeight, jobs = [];
+  for (const key of targets) {
+    const spec = D.specs[key], W = Math.round(spec.width * scale / 2) * 2, H = Math.round(spec.height * scale / 2) * 2;
+    const c = canvas(W, H), ctx = c.getContext("2d");
+    const stream = c.captureStream(30); if (audioTrack) stream.addTrack(audioTrack.clone());
+    const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: Math.round(W * H * 30 * 0.12) });
+    const chunks = []; rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+    const stopped = new Promise((r) => (rec.onstop = r));
+    const sc = { ...spec, width: W, height: H };
+    const trimTo = actions.has("trim") && m.duration > spec.ideal_seconds * 1.4 ? Math.min(spec.max_seconds, Math.max(spec.ideal_seconds, 15)) : Math.min(m.duration || 1e9, spec.max_seconds);
+    jobs.push({ key, spec, c, ctx, rec, chunks, stopped, end: trimTo, done: false, mode: aspectClose(m, spec) ? "crop" : "blur", tiny: canvas(W / 40, H / 40),
+                hook: actions.has("hook_text") ? hookOverlay(W, H, sc, b) : null, pers: persistentOverlay(W, H, sc, b, actions) });
+  }
+  const longest = Math.max(...jobs.map((j) => j.end));
+  const draw = () => {
+    const t = v.currentTime;
+    for (const j of jobs) {
+      if (j.done) continue;
+      if (t >= j.end) { j.done = true; j.rec.stop(); continue; }
+      j.ctx.filter = filter; drawFit(j.ctx, v, sw, sh, j.c.width, j.c.height, j.mode, j.tiny); j.ctx.filter = "none";
+      if (j.hook && t < 3) j.ctx.drawImage(j.hook, 0, 0); if (j.pers) j.ctx.drawImage(j.pers, 0, 0);
+    }
+  };
+  draw();
+  try { await v.play(); }
+  catch { v.muted = true; await v.play(); }
+  for (const j of jobs) j.rec.start(1000);
+  await new Promise((resolve) => {
+    const tick = () => {
+      draw(); progress(`Recording ${Math.min(v.currentTime, longest).toFixed(0)} of ${longest.toFixed(0)} seconds. Keep this page open.`);
+      if (jobs.every((j) => j.done) || v.ended) return resolve();
+      if (v.requestVideoFrameCallback) v.requestVideoFrameCallback(tick); else requestAnimationFrame(tick);
+    };
+    v.onended = () => setTimeout(resolve, 200);
+    tick();
+  });
+  v.pause();
+  for (const j of jobs) if (j.rec.state !== "inactive") j.rec.stop();
+  await Promise.all(jobs.map((j) => j.stopped));
+  ac.close().catch(() => {});
+  return jobs.map((j) => ({ key: j.key, label: j.spec.label, blob: new Blob(j.chunks, { type: mime.split(";")[0] }), name: `${slug()}_${j.key}.${ext}`, type: "video", ext }));
+}
+const slug = () => ((S.business?.product || S.file?.name?.replace(/\.[^.]+$/, "") || "advert").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "advert");
+
+/* ------------------------------------------------------------- AI review */
+const CATS = Object.keys(D.categories);
+function aiPrompt(business, metrics) {
+  return `You are a performance-marketing creative strategist who has run thousands of paid social campaigns for small businesses, especially in African markets and their diasporas. Review this advert. The images are key frames (the first one is the opening/hook) or the photo itself.
+
+Be honest: 50 is average, 80+ is genuinely strong. Judge the hook, product clarity, trust signals, emotional pull, price clarity, call to action, and fit with how people scroll on TikTok, Reels and Facebook.
+
+Business details:
+${JSON.stringify(business, null, 1)}
+
+Measured metrics:
+${JSON.stringify(metrics, null, 1)}
+
+Reply with only one JSON object with exactly these fields:
+{"what_we_see": string, "detected_category": one of ${JSON.stringify(CATS)}, "virality_score": integer 0-100, "virality_reasoning": string,
+ "strengths": [string], "weaknesses": [string],
+ "audiences": [{"name": string, "age_range": string, "gender": string, "interests": [string], "locations": [string], "angle": string}],
+ "hook_text": string (max 8 words, for the first 3 seconds or top of the image),
+ "cta_text": string (max 8 words, how to buy, using the contact details given),
+ "captions": {"tiktok": string, "instagram": string, "facebook": string, "whatsapp": string},
+ "hashtags": [string] (8-15, broad and local),
+ "recommendations": [{"text": string, "priority": "high"|"medium"|"low"}],
+ "reshoot_ideas": [string]}
+Write captions in the business's voice, ready to paste, with emojis where natural.`;
+}
+async function aiReview(business, m) {
+  const metrics = { kind: m.kind, width: m.width, height: m.height, orientation: m.orientation, duration_s: +m.duration.toFixed(1),
+    has_audio: m.has_audio, scene_cuts: m.scene_cuts, opening_motion: +m.opening_motion.toFixed(1), rule_based_score: S.vr.score,
+    average: Object.fromEntries(Object.entries(m.avg).map(([k, x]) => [k, +x.toFixed(2)])) };
+  const max = Math.min(cap.images?.maxCount ?? 4, 6);
+  const images = await Promise.all(m.thumbs.slice(0, max).map((c) => new Promise((r) => c.toBlob(r, "image/jpeg", 0.85))));
+  const r = await cap.sample.json(aiPrompt(business, metrics), { images, modelTier: "default" });
+  if (!r || typeof r !== "object" || typeof r.virality_score !== "number") throw { code: "invalid_json" };
+  return r;
+}
+const AI_ERRORS = { not_granted: "You chose not to let AdLab ask Claude, so this report uses the built-in checks only.",
+  rate_limited: "Claude is busy right now. The report uses the built-in checks; try the deep review again in a minute.",
+  invalid_json: "Claude's answer couldn't be read. The report uses the built-in checks.", refused: "Claude declined to review this advert.",
+  cancelled: "The deep review was stopped." };
+
+/* --------------------------------------------------------------- report */
+function readBusiness() {
+  return { name: $("name").value.trim(), product: $("product").value.trim(), category: $("category").value, price: $("price").value.trim(),
+    contact: $("contact").value.trim(), caption: $("caption").value.trim(), goal: $("goal").value,
+    regions: [...document.querySelectorAll("#regions input:checked")].map((i) => i.value), budget: parseFloat($("budget").value) || 0,
+    days: parseInt($("days").value, 10) || null };
+}
+const color = (s) => (s >= 72 ? "var(--good)" : s >= 50 ? "var(--warn)" : "var(--bad)");
+
+function buildReport(business, m, vr, ai) {
+  const regions = business.regions.length ? business.regions : ["global"];
+  let category = business.category === "auto" ? detectCategory(`${business.product} ${business.caption} ${business.name}`) : business.category;
+  if (ai && business.category === "auto" && D.categories[ai.detected_category]) category = ai.detected_category;
+  const score = ai ? Math.round(0.55 * ai.virality_score + 0.45 * vr.score) : vr.score;
+  const p = plan({ budget: business.budget || 100, category, regions, goal: business.goal, days: business.days, orientation: m.orientation, viral: score });
+  const aud = audience(category, regions);
+  const hook = ai?.hook_text || (business.product ? `New: ${business.product}` : "");
+  const cta = ai?.cta_text || (business.contact ? `Order on WhatsApp ${business.contact}` : "Message us to order today");
+  const actions = new Set([...vr.recommendations.map((r) => r.action).filter(Boolean), "enhance"]);
+  if (business.price || cta) actions.add("price_cta"); if (hook) actions.add("hook_text"); if (business.name) actions.add("watermark");
+  if (m.kind === "image") ["trim", "normalize_audio"].forEach((a) => actions.delete(a));
+  const targets = []; for (const k of [...p.channels.map((c) => c.key), ...p.organic.map((o) => o.key)]) for (const f of D.channels[k].formats) if (!targets.includes(f)) targets.push(f);
+  return { business, category, score, vr, ai, plan: p, aud, actions, targets, branding: { brand: business.name, hook, price: business.price, cta, color: "#F2B31B" } };
+}
+
+function renderReport() {
+  const r = S.report, m = S.media, vr = r.vr, ai = r.ai, p = r.plan, b = r.business;
+  const thumbs = m.thumbs.map((c) => `<img alt="" src="${c.toDataURL("image/jpeg", 0.7)}">`).join("");
+  const kinds = { image: "photo", video: "video" };
+  const fixLabel = (a) => (a ? `<span class="fix">${esc(D.actions[a])}</span>` : "");
+  const html = [];
+  html.push(`<div class="step"><span class="n">Step 2</span><h1>${esc(b.product || "Your advert")}</h1></div>
+  <p class="mute">${esc(r.aud.name)} · ${m.width}×${m.height} ${m.orientation} ${kinds[m.kind]}${m.kind === "video" ? ` · ${m.duration.toFixed(1)} s` : ""}</p>
+  <div class="stack">
+  <div class="cols">
+    <section class="card"><h2>Viral potential</h2>
+      <div class="score" style="color:${color(r.score)}">${r.score}<small>/100</small></div>
+      <p style="margin-top:10px"><span class="pill">Grade ${vr.grade}</span> ${esc(vr.verdict)}</p>
+      ${ai ? `<p class="small mute">Combines Claude's creative review (${ai.virality_score}) with the technical checks (${vr.score}).</p>` : ""}
+      ${S.aiNote ? `<p class="small mute">${esc(S.aiNote)}</p>` : ""}
+    </section>
+    <section class="card"><h2>What the score is made of</h2>
+      ${vr.factors.map((f) => `<div class="factor"><div class="top"><span>${esc(f.name)}</span><span>${Math.round(f.score)}</span></div>
+        <div class="bar"><i style="width:${f.score}%;background:${color(f.score)}"></i></div><div class="small mute">${esc(f.detail)}</div></div>`).join("")}
+    </section>
+  </div>
+  <section class="card"><h2>What we looked at</h2><div class="frames">${thumbs}</div>
+    ${ai ? `<p style="margin-top:12px">${esc(ai.what_we_see)}</p><p>${esc(ai.virality_reasoning)}</p>
+      <div class="cols"><div><h3>Working well</h3><ul>${ai.strengths.map((s) => `<li>${esc(s)}</li>`).join("")}</ul></div>
+      <div><h3>Holding it back</h3><ul>${ai.weaknesses.map((s) => `<li>${esc(s)}</li>`).join("")}</ul></div></div>` : ""}
+  </section>
+  <section class="card"><h2>Recommendations</h2><div class="tablewrap"><table>
+    <thead><tr><th>Priority</th><th>What to do</th><th>AdLab can fix it</th></tr></thead><tbody>
+    ${vr.recommendations.map((x) => `<tr><td class="pr ${x.priority}">${x.priority}</td><td>${esc(x.text)}</td><td>${fixLabel(x.action)}</td></tr>`).join("")}
+    ${ai ? ai.recommendations.map((x) => `<tr><td class="pr ${esc(x.priority)}">${esc(x.priority)}</td><td>${esc(x.text)}</td><td class="small mute">Tip from Claude</td></tr>`).join("") : ""}
+    </tbody></table></div></section>
+  <section class="card"><h2>Who to target</h2><div class="cols3">
+    ${ai?.audiences?.length ? ai.audiences.map((a) => `<div class="seg"><h3>${esc(a.name)}</h3><div class="row" style="gap:6px"><span class="pill">${esc(a.age_range)}</span><span class="pill">${esc(a.gender)}</span></div>
+        <p style="margin:8px 0 4px">${esc(a.angle)}</p><div class="small mute">Interests: ${esc(a.interests.join(", "))}<br>Where: ${esc(a.locations.join(", "))}</div></div>`).join("")
+      : r.aud.segments.map((s) => `<div class="seg"><h3>${esc(s.name)}</h3><div class="row" style="gap:6px"><span class="pill">${esc(s.age)}</span><span class="pill">${esc(s.gender)}</span></div>
+        <p style="margin:8px 0 4px">${esc(s.why)}</p><div class="small mute">Interests to target: ${esc(s.interests.join(", "))}</div></div>`).join("")}
+    </div>
+    <h3>Market notes</h3><ul>${r.aud.regions.map((g) => `<li><b>${esc(g.name)}</b>: best times ${esc(g.peak_times)}. ${esc(g.notes)}</li>`).join("")}</ul>
+  </section>
+  <section class="card"><h2>Channels & budget</h2>
+    ${b.budget ? "" : `<p class="small mute">No budget entered, so this plan uses an example of $100. Enter your own figure and analyse again.</p>`}
+    <p><b>${money(p.budget, 0)}</b> over <b>${p.days} days</b> (${money(p.daily)} a day) · goal: ${esc(p.goal)}</p>
+    <div class="tablewrap"><table><thead><tr><th>Channel</th><th>Share</th><th>Total</th><th>Per day</th><th>Est. reach</th><th>Est. ${esc(p.resultWord)}</th><th>Where to set it up</th></tr></thead><tbody>
+    ${p.channels.map((c) => `<tr><td><b>${esc(c.name)}</b></td><td class="num">${c.share}%</td><td class="num">${money(c.budget)}</td><td class="num">${money(c.daily)}</td><td class="num">${c.reach.toLocaleString()}</td><td class="num">${esc(c.results)}</td><td class="small mute">${esc(c.how)}</td></tr>`).join("")}
+    </tbody></table></div>
+    ${p.organic.length ? `<p style="margin-top:12px"><b>Also post free on:</b> ${p.organic.map((o) => esc(o.name)).join(", ")}</p>` : ""}
+    ${p.skipped.map((x) => `<p class="small mute">${esc(x)}</p>`).join("")}
+    <h3>Run it in three steps</h3><ul>${p.phases.map((ph) => `<li><b>${ph.name}</b> (day ${ph.days}${ph.spend ? `, ${money(ph.spend, 0)}` : ""}): ${esc(ph.what)}</li>`).join("")}</ul>
+    <p class="small mute">These are planning estimates from public benchmarks; real costs depend on your audience and your advert. Post for free first, and only put money behind posts that beat your usual views in the first 24 hours.</p>
+  </section>
+  ${ai ? `<section class="card"><h2>Ready-to-paste captions</h2><div class="cols">
+      ${Object.entries(ai.captions).map(([k, v]) => `<div><h3>${esc(k[0].toUpperCase() + k.slice(1))}</h3><pre class="cap">${esc(v)}</pre><button class="btn ghost sm" type="button" data-copy="${esc(v)}">Copy</button></div>`).join("")}
+    </div><h3>Hashtags</h3><pre class="cap">${esc(ai.hashtags.map((h) => (h.startsWith("#") ? h : "#" + h)).join(" "))}</pre>
+    ${ai.reshoot_ideas?.length ? `<h3>Ideas for your next shoot</h3><ul>${ai.reshoot_ideas.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}</section>`
+    : `<section class="card"><h2>Hook ideas for your next videos</h2><ul>${r.aud.hooks.map((h) => `<li>${esc(h)}</li>`).join("")}</ul></section>`}
+  </div>`);
+
+  const fixes = Object.entries(D.actions).filter(([k]) => k !== "upscale" && !(m.kind === "image" && ["trim", "normalize_audio"].includes(k)) && !(m.kind === "video" && k === "sharpen"));
+  const phone = matchMedia("(pointer: coarse)").matches;
+  html.push(`<div class="step"><span class="n">Step 3</span><h1>Apply the fixes and make every size</h1></div>
+  <form id="makeForm" class="card stack" novalidate>
+    <div><label class="f" id="fixLbl">Fixes to apply</label><div class="chips" role="group" aria-labelledby="fixLbl">
+      ${fixes.map(([k, l]) => `<label class="chip"><input type="checkbox" name="act" value="${k}" ${r.actions.has(k) ? "checked" : ""}> ${esc(l)}</label>`).join("")}</div></div>
+    <div class="cols3">
+      <div><label class="f" for="bHook">Hook text <span>(first 3 seconds / top of photo)</span></label><input id="bHook" type="text" value="${esc(r.branding.hook)}"></div>
+      <div><label class="f" for="bBrand">Brand name on the advert</label><input id="bBrand" type="text" value="${esc(r.branding.brand)}"></div>
+      <div><label class="f" for="bPrice">Price</label><input id="bPrice" type="text" value="${esc(r.branding.price)}"></div>
+      <div><label class="f" for="bCta">Call to action</label><input id="bCta" type="text" value="${esc(r.branding.cta)}"></div>
+      <div><label class="f" for="bColor">Banner colour</label><input id="bColor" type="color" value="${r.branding.color}"></div>
+      ${m.kind === "video" ? `<div><label class="f" for="quality">Video quality</label><select id="quality"><option value="1" ${phone ? "" : "selected"}>Full HD 1080p</option><option value="0.6667" ${phone ? "selected" : ""}>720p (faster on phones)</option></select></div>` : ""}
+    </div>
+    <div><label class="f" id="sizeLbl">Sizes to make <span>(chosen from your channel plan)</span></label><div class="chips" role="group" aria-labelledby="sizeLbl">
+      ${Object.entries(D.specs).map(([k, s]) => `<label class="chip"><input type="checkbox" name="size" value="${k}" ${r.targets.includes(k) ? "checked" : ""}> ${esc(s.label)}</label>`).join("")}</div></div>
+    <div class="row"><button id="makeBtn" class="btn" type="submit">Make my adverts</button><span id="makeStatus" class="small mute progress" aria-live="polite"></span></div>
+    ${m.kind === "video" ? `<p class="small mute">Videos are recorded in real time in your browser, so a 30-second video takes about 30 seconds. Keep this page open while it works.</p>` : ""}
+  </form>
+  <div id="outputs"></div>`);
+  $("report").innerHTML = html.join("");
+  $("makeForm").addEventListener("submit", (e) => { e.preventDefault(); make(); });
+  bindCopy($("report"));
+}
+
+function bindCopy(root) {
+  root.querySelectorAll("[data-copy]").forEach((btn) => btn.addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(btn.dataset.copy); btn.textContent = "Copied"; }
+    catch { const pre = btn.previousElementSibling; const rg = document.createRange(); rg.selectNodeContents(pre); const s = getSelection(); s.removeAllRanges(); s.addRange(rg); btn.textContent = "Selected: copy it"; }
+    setTimeout(() => (btn.textContent = "Copy"), 2000);
+  }));
+}
+
+function renderOutputs() {
+  const o = S.outputs, webm = o.some((x) => x.ext === "webm");
+  S.outputs.forEach((x) => { if (x.url) URL.revokeObjectURL(x.url); x.url = URL.createObjectURL(x.blob); });
+  $("outputs").innerHTML = `<div class="card stack" style="margin-top:16px" id="ready"><h2 style="margin:0">Your adverts are ready</h2>
+    <div class="row">${cap.downloads ? `<button class="btn" type="button" id="saveAll">Save all (.zip)</button>` : ""}<button class="btn ghost" type="button" id="savePlan">Save campaign plan</button></div>
+    ${cap.downloads ? "" : `<p class="small mute">Saving files isn't available in this view. On a phone, press and hold a photo to save it.</p>`}
+    ${webm ? `<p class="small mute">Your browser records WebM video. TikTok and Facebook accept it, but Instagram may not: for MP4 files, open AdLab in Chrome, Edge or Safari.</p>` : ""}
+    <div class="outs">${o.map((x, i) => `<figure>${x.type === "video" ? `<video src="${x.url}" controls playsinline muted preload="metadata"></video>` : `<img src="${x.url}" alt="${esc(x.label)}">`}
+      <figcaption>${esc(x.label)}</figcaption>${cap.downloads ? `<button class="btn ghost sm" type="button" data-save="${i}">Save</button>` : ""}</figure>`).join("")}</div></div>`;
+  const msg = (t) => ($("makeStatus").textContent = t);
+  const save = async (filename, data) => {
+    try { await cap.downloads.save({ filename, data }); msg(`Saved ${filename}`); }
+    catch (e) { msg(e?.code === "declined" ? "Save cancelled." : `Couldn't save ${filename}. ${e?.message || ""}`); }
+  };
+  document.querySelectorAll("[data-save]").forEach((b) => b.addEventListener("click", () => { const x = o[+b.dataset.save]; save(x.name, x.blob); }));
+  $("saveAll")?.addEventListener("click", async () => {
+    if (!window.JSZip) return msg("The zip tool didn't load. Save the files one at a time.");
+    msg("Packing the zip...");
+    const z = new JSZip(); o.forEach((x) => z.file(x.name, x.blob)); z.file("campaign_plan.md", planMarkdown());
+    save(`${slug()}_adlab.zip`, await z.generateAsync({ type: "blob" }));
+  });
+  $("savePlan").addEventListener("click", () => {
+    if (cap.downloads) return save(`${slug()}_campaign_plan.md`, planMarkdown());
+    const pre = document.createElement("pre"); pre.className = "cap"; pre.textContent = planMarkdown(); $("ready").append(pre); pre.scrollIntoView({ behavior: "smooth" });
+  });
+  $("ready").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+}
+
+function planMarkdown() {
+  const r = S.report, p = r.plan, b = r.business, ai = r.ai, L = [];
+  L.push(`# Campaign plan: ${b.name || "My business"} - ${b.product || "advert"}`, "", `**Viral potential:** ${r.score}/100 (grade ${r.vr.grade}). ${r.vr.verdict}`, "");
+  if (ai) L.push("## What Claude sees", ai.what_we_see, "", ai.virality_reasoning, "");
+  L.push("## Fixes", ...r.vr.recommendations.map((x) => `- [${x.priority}] ${x.text}`), ...(ai ? ai.recommendations.map((x) => `- [${x.priority}] ${x.text}`) : []), "", "## Who to target");
+  if (ai?.audiences?.length) ai.audiences.forEach((a) => L.push(`- **${a.name}** - ${a.age_range}, ${a.gender}; interests: ${a.interests.join(", ")}; where: ${a.locations.join(", ")}. ${a.angle}`));
+  else r.aud.segments.forEach((s) => L.push(`- **${s.name}** - ${s.age}, ${s.gender}; interests: ${s.interests.join(", ")}. ${s.why}`));
+  L.push("", `## Budget: ${money(p.budget, 0)} over ${p.days} days (${money(p.daily)}/day) - goal: ${p.goal}`, "", `| Channel | Share | Total | Per day | Est. reach | Est. ${p.resultWord} | How |`, "|---|---|---|---|---|---|---|");
+  p.channels.forEach((c) => L.push(`| ${c.name} | ${c.share}% | ${money(c.budget)} | ${money(c.daily)} | ${c.reach.toLocaleString()} | ${c.results} | ${c.how} |`));
+  if (p.organic.length) L.push("", `**Post free on:** ${p.organic.map((o) => o.name).join(", ")}`);
+  p.skipped.forEach((x) => L.push(`- ${x}`));
+  L.push("", "### Schedule", ...p.phases.map((ph) => `- **${ph.name}** (day ${ph.days}): ${ph.what}`), "", `**Best posting times:** ${p.times.join(" | ")}`, "");
+  if (ai) { L.push("## Ready-to-paste captions"); for (const [k, v] of Object.entries(ai.captions)) L.push(`**${k}:**`, v, ""); L.push(`**Hashtags:** ${ai.hashtags.map((h) => (h.startsWith("#") ? h : "#" + h)).join(" ")}`, ""); }
+  else L.push("## Hook ideas for your next videos", ...r.aud.hooks.map((h) => `- ${h}`), "");
+  L.push("_Figures are planning estimates from public benchmarks; real costs depend on your audience and creative._");
+  return L.join("\n");
+}
+
+/* ----------------------------------------------------------------- flow */
+async function useFile(file, isExample = false) {
+  if (S.url) URL.revokeObjectURL(S.url);
+  S.file = file; S.url = URL.createObjectURL(file); S.isExample = isExample;
+  S.kind = file.type.startsWith("video") || /\.(mp4|mov|m4v|webm|3gp|mkv)$/i.test(file.name) ? "video" : "image";
+  S.el = S.kind === "video" ? await loadVideo(S.url) : await loadImage(S.url);
+  const pv = $("preview"); pv.innerHTML = "";
+  if (S.kind === "video") { const v = document.createElement("video"); v.src = S.url; v.controls = true; v.muted = true; v.playsInline = true; pv.append(v); }
+  else { const i = document.createElement("img"); i.src = S.url; i.alt = "Your advert"; pv.append(i); }
+  $("exampleNote").hidden = !isExample;
+}
+
+async function analyse({ useAi }) {
+  const btn = $("analyseBtn"), st = $("status"), business = readBusiness();
+  if (!S.el) { st.textContent = "Choose a photo or video first."; return; }
+  btn.disabled = true; S.aiNote = "";
+  try {
+    st.classList.add("thinking"); st.textContent = "Measuring your advert";
+    S.media = await analyseMedia((t) => (st.textContent = t));
+    S.vr = viralityScore(S.media, business.caption, business.price);
+    let ai = null;
+    if (useAi && cap.sample) {
+      st.textContent = "Claude is reviewing your advert (up to a minute)";
+      try { ai = await aiReview(business, S.media); }
+      catch (e) { S.aiNote = AI_ERRORS[e?.code] || "The deep review didn't work this time, so the report uses the built-in checks."; }
+    }
+    S.business = business; S.report = buildReport(business, S.media, S.vr, ai); S.outputs = [];
+    renderReport();
+    st.classList.remove("thinking"); st.textContent = "";
+    if (!S.isExample) $("report").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    if (!S.isExample) store.set("adlab.business", { name: business.name, contact: business.contact, category: business.category, goal: business.goal, regions: business.regions, budget: business.budget || "" });
+  } catch (e) {
+    st.classList.remove("thinking"); st.textContent = e?.message || "Something went wrong reading this file.";
+  } finally { btn.disabled = false; }
+}
+
+async function make() {
+  const btn = $("makeBtn"), st = $("makeStatus");
+  const actions = new Set([...document.querySelectorAll("#makeForm input[name=act]:checked")].map((i) => i.value));
+  const targets = [...document.querySelectorAll("#makeForm input[name=size]:checked")].map((i) => i.value);
+  if (!targets.length) { st.textContent = "Tick at least one size."; return; }
+  const b = { brand: $("bBrand").value.trim(), hook: $("bHook").value.trim(), price: $("bPrice").value.trim(), cta: $("bCta").value.trim(), color: $("bColor").value, logo: S.logo };
+  btn.disabled = true; st.classList.add("thinking");
+  try {
+    await document.fonts.load(font(40)).catch(() => {});
+    S.outputs = S.kind === "image" ? await renderImages(targets, actions, b, (t) => (st.textContent = t))
+      : await renderVideos(targets, actions, b, parseFloat($("quality")?.value || "1"), (t) => (st.textContent = t));
+    st.classList.remove("thinking"); st.textContent = `Made ${S.outputs.length} ${S.outputs.length === 1 ? "file" : "files"}.`;
+    renderOutputs();
+  } catch (e) { st.classList.remove("thinking"); st.textContent = e?.message || "Something went wrong while making the files."; }
+  finally { btn.disabled = false; }
+}
+
+/* --------------------------------------------------------- example ad */
+function exampleAdvert() {
+  const W = 1600, H = 1200, c = canvas(W, H), x = c.getContext("2d");
+  const wall = x.createLinearGradient(0, 0, 0, 820); wall.addColorStop(0, "#d6c3a4"); wall.addColorStop(1, "#b9a17e"); x.fillStyle = wall; x.fillRect(0, 0, W, 820);
+  x.fillStyle = "#7a5233"; x.fillRect(0, 820, W, H - 820); x.strokeStyle = "#664229"; x.lineWidth = 3;
+  for (let i = 0; i < W + 200; i += 140) { x.beginPath(); x.moveTo(i, 820); x.lineTo(i - 60, H); x.stroke(); }
+  x.fillStyle = "#f6eedc"; x.fillRect(1180, 180, 300, 380); x.fillStyle = "#96bdd6"; x.fillRect(1195, 195, 270, 350);
+  x.fillStyle = "rgba(40,25,15,.55)"; x.beginPath(); x.ellipse(800, 880, 560, 50, 0, 0, Math.PI * 2); x.fill();
+  const box = (bx, by, bw, bh, r, col) => { x.fillStyle = col; rrect(x, bx, by, bw, bh, r); x.fill(); };
+  box(300, 430, 1000, 220, 40, "#26262e"); box(240, 540, 180, 300, 40, "#1d1d23"); box(1180, 540, 180, 300, 40, "#1d1d23");
+  box(380, 620, 840, 180, 30, "#34343e"); [400, 680, 960].forEach((sx) => box(sx, 600, 260, 100, 25, "#3d3d48"));
+  box(470, 500, 180, 120, 30, "#d4a028"); box(950, 500, 180, 120, 30, "#d4a028");
+  x.fillStyle = "#b58c28"; x.fillRect(330, 840, 20, 40); x.fillRect(1250, 840, 20, 40);
+  x.fillStyle = "#a86a42"; x.fillRect(120, 620, 80, 220); x.fillStyle = "#3e7a3e"; x.beginPath(); x.ellipse(160, 540, 100, 120, 0, 0, Math.PI * 2); x.fill();
+  return new Promise((r) => c.toBlob((b) => r(new File([b], "example-lounge-suite.jpg", { type: "image/jpeg" })), "image/jpeg", 0.9));
+}
+
+/* ----------------------------------------------------------------- boot */
+function fillForm() {
+  $("category").innerHTML = `<option value="auto">Detect automatically</option>` + Object.entries(D.categories).map(([k, c]) => `<option value="${k}">${esc(c.name)}</option>`).join("");
+  $("goal").innerHTML = Object.entries(D.goals).map(([k, g]) => `<option value="${k}">${esc(g)}</option>`).join("");
+  $("regions").innerHTML = Object.entries(D.regions).map(([k, r]) => `<label class="chip"><input type="checkbox" value="${k}"> ${esc(r.name)}</label>`).join("");
+  const saved = store.get("adlab.business");
+  const v = saved || { name: "Black Gold Furniture", contact: "0771 234 567", category: "auto", goal: "messages", regions: ["zimbabwe", "diaspora"], budget: 150 };
+  $("name").value = v.name || ""; $("contact").value = v.contact || ""; $("category").value = v.category || "auto"; $("goal").value = v.goal || "messages";
+  $("budget").value = v.budget || ""; document.querySelectorAll("#regions input").forEach((i) => (i.checked = (v.regions || []).includes(i.value)));
+  $("product").value = "7-seater corner lounge suite"; $("price").value = "From $650";
+  $("caption").value = "Brand new lounge suite. Lay-by available, free delivery in Harare. WhatsApp to order!";
+}
+
+async function boot() {
+  fillForm();
+  const form = $("form");
+  form.addEventListener("submit", (e) => { e.preventDefault(); analyse({ useAi: !$("aiChip").hidden && $("useAi").checked }); });
+  $("media").addEventListener("change", async () => {
+    const f = $("media").files[0]; if (!f) return;
+    try { await useFile(f); $("product").value = ""; $("price").value = ""; $("caption").value = ""; $("status").textContent = "Fill in the details, then press Analyse my advert."; $("product").focus(); }
+    catch (e) { $("status").textContent = e.message; }
+  });
+  $("logo").addEventListener("change", async () => { const f = $("logo").files[0]; S.logo = f ? await loadImage(URL.createObjectURL(f)).catch(() => null) : null; });
+  const drop = $("drop");
+  drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); });
+  drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+  drop.addEventListener("drop", async (e) => {
+    e.preventDefault(); drop.classList.remove("over"); const f = e.dataTransfer.files[0]; if (!f) return;
+    try { await useFile(f); $("status").textContent = "Fill in the details, then press Analyse my advert."; } catch (err) { $("status").textContent = err.message; }
+  });
+
+  await document.fonts.ready.catch(() => {});
+  await useFile(await exampleAdvert(), true);
+  await analyse({ useAi: false });
+
+  // Capabilities light up when the viewer provides them; the page works without.
+  if (window.claude?.use) {
+    claude.use("downloads").then((d) => { cap.downloads = d; if (d && S.outputs.length) renderOutputs(); });
+    claude.use("sample").then(async (s) => {
+      if (!s) return; cap.sample = s; cap.images = (await s.limits().catch(() => null))?.images || null;
+      if (cap.images) $("aiChip").hidden = false; else cap.sample = null;
+    });
+  }
+}
+boot();
+</script>

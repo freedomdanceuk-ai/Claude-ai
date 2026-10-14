@@ -11,7 +11,17 @@ Drop in a **photo or video advert** and AdLab will:
 
 You get a download pack (.zip) with every version plus a `campaign_plan.md` you can follow step by step.
 
-## Install (one time)
+## Use it in your browser (no install)
+
+`web/` holds a version of AdLab that runs entirely in the browser, on a phone or a computer. Your photos and videos stay on your device. It uses the same market data, scoring rules and budget planner as the Python app. Videos are re-recorded in real time in the browser (MP4 in Chrome, Edge and Safari; WebM in Firefox). The deep review with Claude runs on the viewer's own Claude account when the page is opened on claude.ai.
+
+Rebuild it after changing the Python market data or sizes:
+
+```bash
+python web/build.py   # writes web/dist/adlab.html
+```
+
+## Install the desktop version (one time)
 
 You need **Python 3.10+** and **ffmpeg** (for video).
 
