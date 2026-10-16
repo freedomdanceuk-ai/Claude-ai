@@ -320,8 +320,9 @@ function renderCards() {
     const c = el("article", "card");
     const head = el("div", "card-head");
     const s = el("div", "slot");
-    s.append(el("span", "label", slot + " · " + time), el("span", "pill" + (i === 2 ? " peak" : ""), i === 2 ? "Peak time" : (v.type || CALENDAR[current][i])));
-    head.append(s, el("h3", null, (v.type || CALENDAR[current][i]) + (v.product ? " — " + v.product : "")));
+    const type = cleanType(v.type) || CALENDAR[current][i];
+    s.append(el("span", "label", slot + " · " + time), el("span", "pill" + (i === 2 ? " peak" : ""), i === 2 ? "Peak time" : type));
+    head.append(s, el("h3", null, type + (v.product ? " — " + v.product : "")));
     const body = el("div", "card-body");
     body.append(el("div", "hook", v.hook || ""));
     const ol = el("ul", "shots");
@@ -349,10 +350,11 @@ function renderCards() {
   });
 }
 
+function cleanType(t) { return String(t || "").replace(/^\s*(Morning|Lunch|Evening)\s*(\([^)]*\))?\s*[:\-–]\s*/i, ""); }
 function captionText(v) { return (v.caption || "") + "\n\n" + (v.hashtags || []).join(" "); }
 function videoText(v, i) {
   const [slot, time] = SLOTS[i] || ["", ""];
-  const lines = [`${current} ${slot} (${time}): ${v.type || ""}${v.product ? " — " + v.product : ""}`, "HOOK: " + (v.hook || "")];
+  const lines = [`${current} ${slot} (${time}): ${cleanType(v.type)}${v.product ? " — " + v.product : ""}`, "HOOK: " + (v.hook || "")];
   for (const sh of v.shots || []) lines.push(`${sh.sec}s  ${sh.shot}${sh.say ? `  — “${sh.say}”` : ""}`);
   if (v.onScreenText?.length) lines.push("ON SCREEN: " + v.onScreenText.join(" | "));
   lines.push("CAPTION: " + captionText(v));
@@ -404,7 +406,7 @@ Rules:
 - 3–5 hashtags, always including #zimbabwe and #zimtiktok, plus #harare or #bulawayo for local, or #zimbabweansinuk / #zimdiaspora for diaspora.
 
 Reply with only JSON in this shape:
-{"videos":[{"type":"<slot theme>","product":"<product name>","hook":"<first words said or shown>","shots":[{"sec":"0–2","shot":"<what the camera shows>","say":"<spoken line, or empty>"}],"onScreenText":["<short big text>"],"caption":"<TikTok caption without hashtags>","hashtags":["#zimbabwe"],"filmingTip":"<one practical tip>"}]}
+{"videos":[{"type":"<slot theme only, without the time, e.g. Weekend deal announcement>","product":"<product name>","hook":"<first words said or shown>","shots":[{"sec":"0–2","shot":"<what the camera shows>","say":"<spoken line, or empty>"}],"onScreenText":["<short big text>"],"caption":"<TikTok caption without hashtags>","hashtags":["#zimbabwe"],"filmingTip":"<one practical tip>"}]}
 The "videos" array has exactly 3 items, in slot order.`;
 }
 
