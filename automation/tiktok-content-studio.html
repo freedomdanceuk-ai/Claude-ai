@@ -1,0 +1,500 @@
+<title>Black Gold TikTok Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: a studio workbench. Left rail = brand, offer, products. Right = the week, one day at a time, as phone-shaped video cards. */
+:root {
+  --bg: #f6f4ef;
+  --surface: #ffffff;
+  --sunk: #ece8df;
+  --ink: #1d1a16;
+  --muted: #6b6358;
+  --line: #ddd6c9;
+  --gold: #a87613;
+  --gold-soft: #f3e6c4;
+  --on-gold: #1d1a16;
+  --ok: #2f7a4a;
+  --warn: #9a4b16;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14120f; --surface: #1d1a16; --sunk: #26221c; --ink: #f1ece2; --muted: #a89f91;
+    --line: #3a342b; --gold: #e0b04a; --gold-soft: #3a2e14; --on-gold: #14120f; --ok: #6fc28f; --warn: #e79a5f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14120f; --surface: #1d1a16; --sunk: #26221c; --ink: #f1ece2; --muted: #a89f91;
+  --line: #3a342b; --gold: #e0b04a; --gold-soft: #3a2e14; --on-gold: #14120f; --ok: #6fc28f; --warn: #e79a5f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 48px;
+}
+.wrap { max-width: 1200px; margin: 0 auto; display: grid; gap: 24px; }
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; border-bottom: 2px solid var(--ink); padding-bottom: 14px; }
+h1 { font-family: var(--display); font-weight: 800; font-size: clamp(28px, 5vw, 44px); line-height: 1; margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
+h1 span { color: var(--gold); }
+.sub { color: var(--muted); margin: 6px 0 0; max-width: 60ch; }
+h2 { font-family: var(--display); font-size: 20px; margin: 0; letter-spacing: -0.01em; }
+h3 { font-family: var(--display); font-size: 17px; margin: 0; line-height: 1.25; text-wrap: balance; }
+.label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+.layout { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+.rail { display: grid; gap: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; }
+.field { display: grid; gap: 6px; }
+.field label { font-weight: 600; font-size: 13px; }
+.field small { color: var(--muted); font-size: 12px; }
+input, select, textarea {
+  font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; width: 100%;
+}
+textarea { resize: vertical; min-height: 140px; font-size: 13px; line-height: 1.45; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+button { font: inherit; font-weight: 600; cursor: pointer; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 8px 14px; }
+button:hover { border-color: var(--gold); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.primary { background: var(--gold); color: var(--on-gold); border-color: var(--gold); }
+.primary:hover { filter: brightness(1.06); }
+.ghost { background: transparent; }
+.small { padding: 4px 10px; font-size: 13px; }
+
+.main { display: grid; gap: 18px; min-width: 0; }
+.days { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+.day-tab { min-width: 64px; display: grid; gap: 2px; text-align: center; padding: 8px 10px; }
+.day-tab .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--line); margin: 0 auto; }
+.day-tab.has .dot { background: var(--ok); }
+.day-tab[aria-selected="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.status { color: var(--muted); font-size: 13px; min-height: 1.5em; }
+.status.err { color: var(--warn); }
+.banner { background: var(--gold-soft); border-radius: 8px; padding: 10px 14px; font-size: 13px; }
+
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 1100px) { .cards { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: grid; grid-template-rows: auto 1fr auto; min-width: 0; }
+.card-head { padding: 12px 14px; border-bottom: 1px solid var(--line); display: grid; gap: 4px; }
+.slot { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.pill { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: var(--sunk); color: var(--muted); white-space: nowrap; }
+.pill.peak { background: var(--gold); color: var(--on-gold); }
+.card-body { padding: 14px; display: grid; gap: 12px; align-content: start; }
+.hook { font-family: var(--display); font-weight: 700; font-size: 18px; line-height: 1.25; border-left: 3px solid var(--gold); padding-left: 10px; }
+.shots { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.shots li { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 8px; font-size: 13.5px; }
+.shots .t { font-family: var(--mono); font-size: 12px; color: var(--gold); padding-top: 1px; }
+.shots .say { color: var(--muted); font-style: italic; }
+.ost { display: flex; flex-wrap: wrap; gap: 6px; }
+.ost span { background: var(--ink); color: var(--bg); font-weight: 700; font-size: 12px; padding: 3px 8px; border-radius: 4px; }
+.caption { background: var(--sunk); border-radius: 8px; padding: 10px; font-size: 13.5px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.tip { font-size: 13px; color: var(--muted); }
+.card-foot { padding: 10px 14px; border-top: 1px solid var(--line); display: flex; gap: 8px; flex-wrap: wrap; }
+
+.empty { border: 1px dashed var(--line); border-radius: 14px; padding: 28px; text-align: center; color: var(--muted); }
+
+.reply { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 12px; }
+.reply-out { white-space: pre-wrap; background: var(--sunk); border-radius: 8px; padding: 12px; font-size: 14px; min-height: 3em; overflow-wrap: anywhere; }
+.inline { display: flex; gap: 8px; flex-wrap: wrap; }
+.inline input { flex: 1 1 240px; width: auto; }
+
+.copied { color: var(--ok) !important; border-color: var(--ok) !important; }
+@media (prefers-reduced-motion: no-preference) { .card { animation: rise .35s ease both; } @keyframes rise { from { transform: translateY(6px); } to { transform: none; } } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Black Gold <span>TikTok Studio</span></h1>
+      <p class="sub">Turn your product list into 21 ready-to-film TikToks a week: hooks, shot lists, on-screen prices, captions and hashtags. Built on your weekly content calendar.</p>
+    </div>
+    <div class="label mono" id="weekLabel"></div>
+  </header>
+
+  <div class="layout">
+    <aside class="rail" aria-label="Brand and products">
+      <h2>Your shop</h2>
+      <div class="field">
+        <label for="brand">Brand name</label>
+        <input id="brand" value="Black Gold Furniture">
+      </div>
+      <div class="field">
+        <label for="wa">WhatsApp number</label>
+        <input id="wa" placeholder="2637XXXXXXXX" inputmode="tel">
+        <small>Goes into captions as wa.me/your-number.</small>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="lang">Language</label>
+          <select id="lang">
+            <option>English</option>
+            <option selected>English + Shona mix</option>
+            <option>Shona</option>
+            <option>English + Ndebele mix</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="aud">Audience</label>
+          <select id="aud">
+            <option selected>Local (Harare, Bulawayo, towns)</option>
+            <option>Diaspora (UK, SA, USA, Aus)</option>
+            <option>Both</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="offer">This week's offer</label>
+        <input id="offer" value="Lay-by from 30% deposit + free delivery in Harare this weekend">
+      </div>
+      <div class="field">
+        <label for="products">Products</label>
+        <textarea id="products" rows="9"></textarea>
+        <small>One per line: <span class="mono">Name | Price | Details</span>. The examples below are placeholders. Replace them with your real products and prices.</small>
+      </div>
+      <div class="field">
+        <label for="extras">Selling points</label>
+        <input id="extras" value="12-month frame warranty · EcoCash, InnBucks, USD cash · Countrywide courier">
+      </div>
+    </aside>
+
+    <section class="main" aria-label="Weekly content">
+      <div class="days" role="tablist" id="days"></div>
+
+      <div class="toolbar">
+        <button class="primary" id="genDay">Generate this day</button>
+        <button id="genWeek">Generate whole week</button>
+        <button class="ghost" id="stop" hidden>Stop</button>
+        <button class="ghost" id="copyDay">Copy day as text</button>
+        <button class="ghost" id="copyPrompt" title="Use this if generating does not work here: paste it into a Claude chat">Copy prompt</button>
+      </div>
+      <div class="status" id="status" aria-live="polite"></div>
+      <div class="banner" id="exampleBanner" hidden>This day is an <b>example</b> to show the format. Add your products, then press <b>Generate this day</b>.</div>
+
+      <div class="cards" id="cards"></div>
+
+      <div class="reply">
+        <div>
+          <h2>Reply to a comment with a video</h2>
+          <p class="sub">TikTok pushes video replies. Paste a comment and get a 20-second script.</p>
+        </div>
+        <div class="inline">
+          <input id="comment" value="Do you deliver to Gweru? How much for the L-shape?" aria-label="TikTok comment">
+          <button class="primary" id="genReply">Write reply video</button>
+        </div>
+        <div class="reply-out" id="replyOut">Your reply script will appear here.</div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+const CALENDAR = {
+  Mon: ["New product reveal + price", "Workshop process", "Customer delivery"],
+  Tue: ["\"Guess the price\"", "Room makeover before/after", "Answer a comment (e.g. \"Do you deliver to Gweru?\")"],
+  Wed: ["What's inside (quality proof)", "Fabric/colour options", "Delivery"],
+  Thu: ["Lay-by explained in 30 seconds", "Funny skit (wife vs husband choosing a sofa)", "Customer testimonial"],
+  Fri: ["Weekend deal announcement", "Stock running low (only if true)", "TikTok LIVE run-of-show"],
+  Sat: ["Delivery montage", "Showroom walk-through", "Trend/sound with furniture"],
+  Sun: ["Customer home tour", "\"Which one would you pick? 1 or 2\"", "Week's best sellers"],
+};
+const DAYS = Object.keys(CALENDAR);
+const SLOTS = [["Morning", "6–8am"], ["Lunch", "12–1pm"], ["Evening", "7–9pm"]];
+
+const EXAMPLE_PRODUCTS = [
+  "7-Seater L-Shape Lounge Suite (example) | $650 | Solid pine frame, high-density foam, grey or brown fabric, 2.8m x 2.1m",
+  "Queen Bed + Headboard (example) | $380 | Upholstered headboard, base with drawers, 1.5m",
+  "6-Seater Dining Set (example) | $520 | Glass top, cushioned chairs, 1.6m table",
+  "Kitchen Unit 1.8m (example) | $290 | Melamine, 4 doors, 2 drawers, white or wood finish",
+].join("\n");
+
+const EXAMPLE_MON = [
+  { type: "New product reveal + price", product: "7-Seater L-Shape Lounge Suite", hook: "This 7-seater is cheaper than you think…",
+    shots: [{ sec: "0–2", shot: "Close-up of cushion, slow pull back", say: "This 7-seater is cheaper than you think…" },
+            { sec: "2–8", shot: "Walk around the full suite in the showroom", say: "Solid pine frame, high-density foam. Ichagara makore." },
+            { sec: "8–14", shot: "Sit down, bounce on the seat, show fabric options", say: "Grey or brown, made to your size." },
+            { sec: "14–20", shot: "Price card in hand, smile to camera", say: "Only $650. Lay-by from 30%. WhatsApp us, link in bio." }],
+    onScreenText: ["7-SEATER L-SHAPE", "$650", "LAY-BY AVAILABLE"],
+    caption: "Lounge goals without breaking the bank 🛋️ $650, lay-by from 30%, free delivery in Harare this weekend. WhatsApp us, link in bio 👆",
+    hashtags: ["#zimbabwe", "#harare", "#zimtiktok", "#furniture", "#homedecor"],
+    filmingTip: "Film near the showroom door for natural light. Hold the phone at chest height." },
+  { type: "Workshop process", product: "Queen Bed + Headboard", hook: "From timber to headboard in 15 seconds 🔨",
+    shots: [{ sec: "0–3", shot: "Raw timber being cut, fast cuts", say: "" },
+            { sec: "3–8", shot: "Frame being assembled, foam going on", say: "Every bed starts here, in our workshop." },
+            { sec: "8–13", shot: "Fabric being stapled, headboard finished", say: "No shortcuts inside." },
+            { sec: "13–18", shot: "Finished bed in a room", say: "Queen bed + headboard, $380. WhatsApp us." }],
+    onScreenText: ["MADE IN ZIMBABWE 🇿🇼", "QUEEN BED $380"],
+    caption: "Real workshop, real craftsmen, real quality 🔨 Queen bed + headboard $380. Order on WhatsApp, link in bio.",
+    hashtags: ["#zimbabwe", "#harare", "#zimtiktok", "#bedroomdecor", "#madeinzimbabwe"],
+    filmingTip: "Use a trending fast-paced sound and cut on every beat." },
+  { type: "Customer delivery", product: "6-Seater Dining Set", hook: "Another one delivered to Budiriro 🚚",
+    shots: [{ sec: "0–3", shot: "Truck doors opening, boxes coming out", say: "Another one delivered!" },
+            { sec: "3–10", shot: "Team carrying the set inside, setting it up", say: "6-seater dining set, straight to the door." },
+            { sec: "10–16", shot: "Family sitting at the table (with permission)", say: "Mazvita, family!" },
+            { sec: "16–20", shot: "Logo on truck + WhatsApp number", say: "Yours next? WhatsApp us." }],
+    onScreenText: ["DELIVERED TO BUDIRIRO", "$520", "FREE HARARE DELIVERY"],
+    caption: "Another happy family in Budiriro 🍽️ 6-seater dining set $520. Delivered in 24–48h. WhatsApp us, link in bio.",
+    hashtags: ["#zimbabwe", "#harare", "#zimtiktok", "#delivery", "#diningroom"],
+    filmingTip: "Ask the customer before filming faces. Get a 5-second thank-you clip for a testimonial." },
+];
+
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("bgts:" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("bgts:" + k, JSON.stringify(v)); } catch {} },
+};
+
+const FIELDS = ["brand", "wa", "lang", "aud", "offer", "products", "extras"];
+let week = store.get("week", {});
+let current = DAYS[Math.max(0, (new Date().getDay() + 6) % 7)];
+let sample = null;
+let ctl = null;
+
+function initFields() {
+  const saved = store.get("fields", {});
+  $("products").value = EXAMPLE_PRODUCTS;
+  for (const f of FIELDS) {
+    if (saved[f] != null) $(f).value = saved[f];
+    $(f).addEventListener("input", saveFields);
+    $(f).addEventListener("change", saveFields);
+  }
+}
+function saveFields() { const o = {}; for (const f of FIELDS) o[f] = $(f).value; store.set("fields", o); }
+
+function weekLabel() {
+  const now = new Date(); const mon = new Date(now); mon.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+  const fmt = (d) => d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  $("weekLabel").textContent = "Week of " + fmt(mon) + " – " + fmt(sun);
+}
+
+function renderTabs() {
+  const box = $("days"); box.textContent = "";
+  for (const d of DAYS) {
+    const b = document.createElement("button");
+    b.className = "day-tab" + (week[d] ? " has" : "");
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-selected", d === current ? "true" : "false");
+    const t = document.createElement("span"); t.textContent = d;
+    const dot = document.createElement("span"); dot.className = "dot";
+    b.append(t, dot);
+    b.onclick = () => { current = d; render(); };
+    box.append(b);
+  }
+}
+
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+function videosFor(day) {
+  if (week[day]) return { videos: week[day], example: false };
+  if (day === "Mon") return { videos: EXAMPLE_MON, example: true };
+  return { videos: null, example: false };
+}
+
+function renderCards() {
+  const box = $("cards"); box.textContent = "";
+  const { videos, example } = videosFor(current);
+  $("exampleBanner").hidden = !example;
+  if (!videos) {
+    const e = el("div", "empty");
+    e.style.gridColumn = "1 / -1";
+    e.append(el("h3", null, current + ": nothing yet"));
+    const ul = el("p", null, "Today's plan: " + CALENDAR[current].join(" · ") + ".");
+    e.append(ul, el("p", null, "Press Generate this day to write all three videos."));
+    box.append(e);
+    return;
+  }
+  videos.forEach((v, i) => {
+    const [slot, time] = SLOTS[i] || ["Video " + (i + 1), ""];
+    const c = el("article", "card");
+    const head = el("div", "card-head");
+    const s = el("div", "slot");
+    s.append(el("span", "label", slot + " · " + time), el("span", "pill" + (i === 2 ? " peak" : ""), i === 2 ? "Peak time" : (v.type || CALENDAR[current][i])));
+    head.append(s, el("h3", null, (v.type || CALENDAR[current][i]) + (v.product ? " — " + v.product : "")));
+    const body = el("div", "card-body");
+    body.append(el("div", "hook", v.hook || ""));
+    const ol = el("ul", "shots");
+    for (const sh of v.shots || []) {
+      const li = el("li");
+      const right = el("div");
+      right.append(el("div", null, sh.shot || ""));
+      if (sh.say) right.append(el("div", "say", "“" + sh.say + "”"));
+      li.append(el("span", "t", (sh.sec || "") + "s"), right);
+      ol.append(li);
+    }
+    body.append(el("div", "label", "Shot list"), ol);
+    if (v.onScreenText?.length) {
+      const o = el("div", "ost"); for (const t of v.onScreenText) o.append(el("span", null, t));
+      body.append(el("div", "label", "On-screen text"), o);
+    }
+    body.append(el("div", "label", "Caption"), el("div", "caption", captionText(v)));
+    if (v.filmingTip) body.append(el("div", "tip", "🎥 " + v.filmingTip));
+    const foot = el("div", "card-foot");
+    const cc = el("button", "small", "Copy caption"); cc.onclick = () => copy(captionText(v), cc);
+    const cs = el("button", "small ghost", "Copy script"); cs.onclick = () => copy(videoText(v, i), cs);
+    foot.append(cc, cs);
+    c.append(head, body, foot);
+    box.append(c);
+  });
+}
+
+function captionText(v) { return (v.caption || "") + "\n\n" + (v.hashtags || []).join(" "); }
+function videoText(v, i) {
+  const [slot, time] = SLOTS[i] || ["", ""];
+  const lines = [`${current} ${slot} (${time}): ${v.type || ""}${v.product ? " — " + v.product : ""}`, "HOOK: " + (v.hook || "")];
+  for (const sh of v.shots || []) lines.push(`${sh.sec}s  ${sh.shot}${sh.say ? `  — “${sh.say}”` : ""}`);
+  if (v.onScreenText?.length) lines.push("ON SCREEN: " + v.onScreenText.join(" | "));
+  lines.push("CAPTION: " + captionText(v));
+  if (v.filmingTip) lines.push("TIP: " + v.filmingTip);
+  return lines.join("\n");
+}
+
+async function copy(text, btn) {
+  const old = btn.textContent;
+  try { await navigator.clipboard.writeText(text); btn.textContent = "Copied"; btn.classList.add("copied"); }
+  catch { setStatus("Copy was blocked. Select the text on the card and copy it by hand.", true); return; }
+  setTimeout(() => { btn.textContent = old; btn.classList.remove("copied"); }, 1400);
+}
+
+function setStatus(msg, err) { const s = $("status"); s.textContent = msg; s.classList.toggle("err", !!err); }
+
+function shopContext() {
+  const wa = $("wa").value.trim();
+  return [
+    `Brand: ${$("brand").value.trim() || "the shop"}`,
+    `WhatsApp link: ${wa ? "wa.me/" + wa.replace(/\D/g, "") : "link in bio"}`,
+    `Language for spoken lines and captions: ${$("lang").value}`,
+    `Audience focus: ${$("aud").value}`,
+    `Offer this week: ${$("offer").value.trim() || "none"}`,
+    `Selling points: ${$("extras").value.trim()}`,
+    `Products (name | price | details):\n${$("products").value.trim()}`,
+  ].join("\n");
+}
+
+function dayPrompt(day) {
+  const plan = CALENDAR[day].map((t, i) => `${i + 1}. ${SLOTS[i][0]} (${SLOTS[i][1]}): ${t}`).join("\n");
+  return `You write TikTok videos for a furniture business in Zimbabwe. Sales close on WhatsApp.
+
+${shopContext()}
+
+Write the 3 videos for ${day}:
+${plan}
+
+Rules:
+- The hook must grab attention in the first 2 seconds.
+- Each video is 15–35 seconds, vertical, filmable on one phone by a small team.
+- Show the USD price on screen. Use only the prices given above; never invent prices or discounts.
+- Feature a different product in each video where it fits.
+- Use Zimbabwean places, slang and humour naturally. Spoken lines follow the language setting.
+- Testimonial or delivery videos: give the shots and the questions to ask the customer. Do not invent quotes from real customers. Remind them to ask permission before filming faces.
+- "Stock running low" only if true: tell them to check stock first.
+- A TikTok LIVE slot: give a run-of-show with timed segments and a live-only deal based on the offer.
+- End every video with the call to action "WhatsApp us, link in bio".
+- 3–5 hashtags, always including #zimbabwe and #zimtiktok, plus #harare or #bulawayo for local, or #zimbabweansinuk / #zimdiaspora for diaspora.
+
+Reply with only JSON in this shape:
+{"videos":[{"type":"<slot theme>","product":"<product name>","hook":"<first words said or shown>","shots":[{"sec":"0–2","shot":"<what the camera shows>","say":"<spoken line, or empty>"}],"onScreenText":["<short big text>"],"caption":"<TikTok caption without hashtags>","hashtags":["#zimbabwe"],"filmingTip":"<one practical tip>"}]}
+The "videos" array has exactly 3 items, in slot order.`;
+}
+
+function errCopy(code) {
+  switch (code) {
+    case "not_granted": case "sampling_disabled": case "not_declared": case "capability_disabled": case "capability_removed":
+      return "Generating isn't allowed in this view. Use Copy prompt and paste it into a Claude chat instead.";
+    case "rate_limited": return "You've hit a usage limit. Wait a few minutes, then try again.";
+    case "session_expired": return "Your Claude session expired. Sign in again, then try again.";
+    case "invalid_json": return "Claude's answer came back in the wrong format. Press Generate again.";
+    case "refused": return "Claude declined this request. Check the product list for anything unusual and try again.";
+    case "prompt_too_large": return "The product list is too long. Keep it to your top 30 products.";
+    default: return "Something went wrong while generating. Try again.";
+  }
+}
+
+function busy(on) {
+  for (const id of ["genDay", "genWeek", "genReply"]) $(id).disabled = on || !sample;
+  $("stop").hidden = !on;
+}
+
+async function generateDay(day) {
+  ctl = new AbortController();
+  setStatus(`Writing ${day}'s 3 videos… this takes about 30–60 seconds.`);
+  const data = await sample.json(dayPrompt(day), { signal: ctl.signal, cache: false });
+  const vids = Array.isArray(data?.videos) ? data.videos.slice(0, 3) : null;
+  if (!vids || !vids.length) throw { code: "invalid_json" };
+  week[day] = vids; store.set("week", week);
+}
+
+async function runDays(days) {
+  busy(true);
+  try {
+    for (const d of days) {
+      current = d; render();
+      await generateDay(d);
+      render();
+    }
+    setStatus(days.length > 1 ? "Week ready. 21 videos written." : `${days[0]} ready.`);
+  } catch (e) {
+    if (e?.code === "cancelled") setStatus("Stopped.");
+    else setStatus(errCopy(e?.code), true);
+  } finally { busy(false); render(); }
+}
+
+async function generateReply() {
+  const comment = $("comment").value.trim();
+  if (!comment) { setStatus("Paste a comment first.", true); return; }
+  const out = $("replyOut");
+  busy(true); ctl = new AbortController();
+  out.textContent = "Thinking…";
+  const prompt = `You write TikTok video replies for a Zimbabwean furniture business.
+
+${shopContext()}
+
+A viewer commented: "${comment}"
+
+Write a 15–25 second video reply script that answers the comment directly and sells. Use only the prices and facts above; if something is unknown (for example a courier price to a town), say "WhatsApp us for the exact price" instead of guessing.
+Format, plain text:
+HOOK (0–2s): …
+SHOTS: timed lines with what to film and what to say
+ON-SCREEN TEXT: …
+CAPTION: … with 3–5 hashtags`;
+  try {
+    await sample(prompt, { signal: ctl.signal, cache: false, onText: ({ text }) => { out.textContent = text; } });
+    setStatus("Reply script ready.");
+  } catch (e) {
+    out.textContent = e?.text ?? "";
+    if (e?.code !== "cancelled") setStatus(errCopy(e?.code), true);
+  } finally { busy(false); }
+}
+
+function render() { renderTabs(); renderCards(); }
+
+$("genDay").onclick = () => runDays([current]);
+$("genWeek").onclick = () => runDays(DAYS.slice());
+$("genReply").onclick = generateReply;
+$("stop").onclick = () => ctl?.abort();
+$("copyDay").onclick = (ev) => {
+  const { videos } = videosFor(current);
+  if (!videos) { setStatus("Nothing to copy yet for " + current + ".", true); return; }
+  copy(videos.map((v, i) => videoText(v, i)).join("\n\n———\n\n"), ev.currentTarget);
+};
+$("copyPrompt").onclick = (ev) => copy(dayPrompt(current), ev.currentTarget);
+
+initFields(); weekLabel(); render(); busy(false);
+setStatus("Connecting to Claude…");
+(async () => {
+  try { sample = window.claude ? await window.claude.use("sample") : null; } catch { sample = null; }
+  busy(false);
+  setStatus(sample ? "Ready. Edit your products, pick a day and press Generate." : "Generating works when this page is opened on claude.ai. Here, use Copy prompt and paste it into a Claude chat.");
+})();
+</script>
