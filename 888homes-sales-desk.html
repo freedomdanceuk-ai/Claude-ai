@@ -125,7 +125,36 @@ details.settings .fields { margin-top: 10px; }
 .empty { background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; padding: 24px; text-align: center; color: var(--muted); }
 .routine { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14px; }
 
+/* Content view */
+.content { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 20px; align-items: start; }
+.today { background: var(--velvet); color: var(--velvet-ink); border-radius: 14px; padding: 16px; display: grid; gap: 8px; }
+.today .eyebrow { color: inherit; opacity: .8; }
+.today h2 { font-family: var(--display); font-weight: 400; font-size: 22px; margin: 0; }
+.today .hook { font-family: var(--display); font-size: 18px; line-height: 1.3; }
+.today p { margin: 0; font-size: 14px; }
+.today .btn { background: var(--velvet-ink); color: var(--velvet); border-color: var(--velvet-ink); justify-self: start; }
+.week { display: grid; gap: 10px; }
+.week h3 { font-family: var(--display); font-weight: 400; font-size: 19px; margin: 10px 0 0; }
+.week .goal { margin: 0; color: var(--muted); font-size: 14px; }
+.day { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 4px 14px; }
+.day.isToday { border-color: var(--brass); box-shadow: 0 0 0 2px var(--brass) inset; }
+.day.done { opacity: .72; }
+.day .date { font-variant-numeric: tabular-nums; line-height: 1.15; }
+.day .date b { display: block; font-family: var(--display); font-weight: 400; font-size: 24px; }
+.day .date span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.day .what { display: grid; gap: 4px; min-width: 0; }
+.day .type { font-weight: 700; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.day .hookline { font-family: var(--display); font-size: 16px; }
+.day .film { font-size: 14px; color: var(--muted); }
+.day .row { grid-column: 2; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-top: 4px; font-size: 13px; }
+.day .row label { display: inline-flex; gap: 6px; align-items: center; color: var(--ink); font-size: 13px; }
+.day .row input[type="checkbox"] { width: auto; }
+.day .row input[type="number"] { width: 72px; padding: 4px 8px; font-size: 13px; }
+.chip.boost { background: var(--brass-soft); color: var(--brass); }
+.tips { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14px; }
+
 @media (max-width: 980px) {
+  .content { grid-template-columns: 1fr; }
   .scripts { grid-template-columns: 1fr 1fr; }
   .scripts .pickpanel { grid-column: 1 / -1; }
   .picker { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
@@ -149,6 +178,7 @@ details.settings .fields { margin-top: 10px; }
     <div class="tabs" role="tablist">
       <button class="tab" role="tab" id="tab-scripts" aria-selected="true" data-view="scripts">Scripts</button>
       <button class="tab" role="tab" id="tab-follow" aria-selected="false" data-view="follow">Follow-ups <span class="badge" id="dueBadge" hidden>0</span></button>
+      <button class="tab" role="tab" id="tab-content" aria-selected="false" data-view="content">Content</button>
     </div>
   </header>
 
@@ -175,6 +205,8 @@ details.settings .fields { margin-top: 10px; }
           <div class="field full"><label for="set-fabrics">Fabric options</label><input id="set-fabrics"></div>
           <div class="field full"><label for="set-cheapItem">Budget option</label><input id="set-cheapItem"></div>
           <div class="field full"><label for="set-tiktok">TikTok link</label><input id="set-tiktok" placeholder="https://www.tiktok.com/@..."></div>
+          <div class="field"><label for="set-whatsapp">Shop WhatsApp number (for captions)</label><input id="set-whatsapp" inputmode="tel" placeholder="077 123 4567"></div>
+          <div class="field"><label for="set-combo">Bedroom Combo price ($)</label><input id="set-combo" inputmode="numeric"></div>
         </div>
       </details>
     </div>
@@ -223,6 +255,36 @@ details.settings .fields { margin-top: 10px; }
 
     <div class="group" id="leadList"></div>
   </section>
+
+  <!-- CONTENT -->
+  <section id="view-content" class="content" hidden>
+    <div class="group">
+      <div class="today" id="todayCard"></div>
+      <div class="summary" id="contentStats"></div>
+      <div class="panel">
+        <h2>November ad budget</h2>
+        <ul class="tips">
+          <li><b>Facebook, about $400:</b> spread across the ★ Boost videos, from about $15 a day. Harare, women 22–45, home décor and interior design.</li>
+          <li><b>TikTok, about $200:</b> promote the 3 videos with the most views each week.</li>
+          <li><b>Every Friday:</b> compare the WhatsApp messages each video brought in. Put more money behind the winner.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h2>Filming tips</h2>
+        <ul class="tips">
+          <li>Film in batches 2 days a week, for example Monday and Thursday.</li>
+          <li>Natural light, vertical video, 15–30 seconds.</li>
+          <li>No heavy filters. Customers worry photos won't match.</li>
+          <li>At every delivery, take one photo and one short video.</li>
+          <li>Post at 6–8pm, then check TikTok analytics after 2 weeks and adjust.</li>
+        </ul>
+        <p class="hint">Combo price, offer end date and WhatsApp number come from Scripts → Shop settings.</p>
+      </div>
+      <p class="status" id="contentStatus" aria-live="polite"></p>
+      <textarea id="contentFallback" rows="4" hidden aria-label="Caption text to copy"></textarea>
+    </div>
+    <div class="group" id="calendar"></div>
+  </section>
 </div>
 
 <script>
@@ -255,15 +317,15 @@ details.settings .fields { margin-top: 10px; }
   // ---------- settings ----------
   const DEFAULTS = {
     layby: false, deposit: "40", laydays: "60", offerEnd: "15 December", ready: "",
-    fabrics: "velvet, suede or leatherette", cheapItem: "$55 headboard", tiktok: ""
+    fabrics: "velvet, suede or leatherette", cheapItem: "$55 headboard", tiktok: "", whatsapp: "", combo: "399"
   };
   const settings = Object.assign({}, DEFAULTS, store.get("888-settings", {}));
-  ["deposit", "laydays", "offerEnd", "ready", "fabrics", "cheapItem", "tiktok"].forEach((k) => {
+  ["deposit", "laydays", "offerEnd", "ready", "fabrics", "cheapItem", "tiktok", "whatsapp", "combo"].forEach((k) => {
     const el = $("set-" + k); el.value = settings[k];
-    el.addEventListener("input", () => { settings[k] = el.value; store.set("888-settings", settings); render(); });
+    el.addEventListener("input", () => { settings[k] = el.value; store.set("888-settings", settings); render(); renderContent(); });
   });
   $("set-layby").checked = !!settings.layby;
-  $("set-layby").addEventListener("change", (e) => { settings.layby = e.target.checked; store.set("888-settings", settings); render(); });
+  $("set-layby").addEventListener("change", (e) => { settings.layby = e.target.checked; store.set("888-settings", settings); render(); renderContent(); });
 
   // ---------- scripts ----------
   // Fields each script needs. Labels show in the preview as [Label] until filled.
@@ -440,8 +502,138 @@ details.settings .fields { margin-top: 10px; }
     document.querySelectorAll(".tab").forEach((t) => t.setAttribute("aria-selected", String(t.dataset.view === v)));
     $("view-scripts").hidden = v !== "scripts";
     $("view-follow").hidden = v !== "follow";
+    $("view-content").hidden = v !== "content";
     store.set("888-view", v);
   }
+
+  // ---------- content calendar ----------
+  const WEEKS = {
+    1: ["Week 1 · Meet 888homes", "Show you're real, local and reliable. This answers the \"is this a scam?\" worry."],
+    2: ["Week 2 · Bedroom makeover", "Sell the stylish-room feeling, launch the Bedroom Combo and move beds and wardrobes."],
+    3: ["Week 3 · Sofas & lounges", "Push sofas, your highest-profit product, and custom orders."],
+    4: ["Week 4 · Festive push & payday", "Turn interest into sales before December, while people have their pay."]
+  };
+  const CAL = [
+    ["2026-11-01", 1, "Founder intro", "We make every piece ourselves, right here in Harare", "You talking to camera in the workshop for 20–30s: who you are, 2 years, both showrooms.", true],
+    ["2026-11-02", 1, "Showcase + price", "This velvet headboard is only $55 😍", "Close-up of the fabric, then the full headboard on a bed, price on screen."],
+    ["2026-11-03", 1, "Workshop making-of", "From wood to luxury in 60 seconds", "Timelapse of a headboard being built and upholstered."],
+    ["2026-11-04", 1, "Showroom tour", "Come see us in Graniteside 📍", "Walk through the shop from the entrance, showing the signboard and street."],
+    ["2026-11-05", 1, "Customer delivery", "Delivered today in [suburb] ✅", "Loading the truck, then the item in the customer's room (with permission)."],
+    ["2026-11-06", 1, "Showcase: sofa", "Your lounge deserves this", "Sofa from several angles, someone sitting down on it, price."],
+    ["2026-11-07", 1, "Glen View workshop tour", "This is where your furniture is made", "Carpenters at work, frames, fabric rolls."],
+    ["2026-11-08", 2, "Before and after", "Same bedroom. Just one change.", "Plain bed, then the same room with a velvet headboard.", true],
+    ["2026-11-09", 2, "Bedroom Combo launch", "Bed + headboard + bedside tables = ${combo}", "Each piece placed one by one into a styled bedroom, price at the end.", true],
+    ["2026-11-10", 2, "Colour choices", "Pick your colour, we make it for you 🎨", "Hands moving through fabric swatches next to a headboard."],
+    ["2026-11-11", 2, "Showcase: design headboard", "The headboard everyone's asking about", "Your best-selling designer headboard, with a slow pan."],
+    ["2026-11-12", 2, "Customer photos & reviews", "What our customers say ❤️", "Slideshow of happy customer photos and WhatsApp screenshots, names hidden."],
+    ["2026-11-13", 2, "Wardrobe showcase", "Finally, space for all your clothes", "Doors opening, the inside, clothes hanging, price."],
+    ["2026-11-14", 2, "Founder FAQ", "Do the photos match what you get? Watch this", "Hold a phone with the TikTok photo next to the real item."],
+    ["2026-11-15", 3, "Lounge makeover", "Rate this lounge transformation 1–10", "Before, then after with a new sofa.", true],
+    ["2026-11-16", 3, "Showcase: sofa lounge", "$300 lounge suite, made in Harare", "Sofa styled with cushions, price on screen."],
+    ["2026-11-17", 3, "Making-of: sofa", "What's inside a quality sofa?", "The frame, foam and fabric going on. This proves your quality."],
+    ["2026-11-18", 3, "Bachelor couch", "Perfect for your first flat 🏠", "The bachelor couch in a small room, price $200."],
+    ["2026-11-19", 3, "Customer delivery", "Another happy home ✅", "A sofa delivery and the customer's reaction."],
+    ["2026-11-20", 3, "Custom order story", "She wanted emerald velvet. We made it.", "Customer request, then the making, then the finished piece."],
+    ["2026-11-21", 3, "Founder FAQ", "How long does delivery take?", "Answer clearly: ready in X days, delivery cost, areas covered."],
+    ["2026-11-22", 4, "Festive offer launch", "Festive prices are here 🎄", "Quick cuts of best sellers with prices and \"offer ends {offerEnd}\".", true],
+    ["2026-11-23", 4, "Lay-by announcement", "Pay a deposit now, take it home before Christmas", "You explaining the lay-by terms simply.", true],
+    ["2026-11-24", 4, "Bedroom Combo reminder", "Upgrade your bedroom before Christmas", "The styled bedroom combo with its festive price."],
+    ["2026-11-25", 4, "Payday post", "Payday = room upgrade day 💸", "Top 5 pieces with prices, fast cuts."],
+    ["2026-11-26", 4, "Customer reviews montage", "Harare is loving 888homes ❤️", "Several customer photos and videos in one clip."],
+    ["2026-11-27", 4, "Delivery day", "Deliveries are going out all over Harare 🚚", "The truck loaded, several drop-offs."],
+    ["2026-11-28", 4, "Showroom walk-through", "Come shop the festive collection 📍", "Both showrooms, busy and stocked."],
+    ["2026-11-29", 4, "Founder thank-you", "Thank you Harare 🙏", "You thanking customers and reminding them of the offer end date."],
+    ["2026-11-30", 4, "Countdown", "Festive prices end {offerEnd} ⏳", "Best seller with the price and countdown text."]
+  ].map(([d, w, type, hook, film, boost]) => ({ d, w, type, hook, film, boost: !!boost }));
+  const LAYBY_SWAP = { type: "Before and after", hook: "Rate this bedroom glow-up 1–10", film: "Another before-and-after room transformation. (Swap back to the lay-by video once lay-by is launched.)" };
+
+  let posts = {};       // date -> { posted, messages }
+  let postsBackend = null;
+
+  function fillTokens(s) {
+    return s.replace("${combo}", "$" + (money(settings.combo) || "399")).replace("{offerEnd}", settings.offerEnd || "15 December");
+  }
+  function dayView(c) {
+    const base = (c.d === "2026-11-23" && !settings.layby) ? Object.assign({}, c, LAYBY_SWAP) : c;
+    return Object.assign({}, base, { hook: fillTokens(base.hook), film: fillTokens(base.film) });
+  }
+  function caption(c) {
+    const wa = settings.whatsapp ? settings.whatsapp : "07X XXX XXXX";
+    return `${c.hook}\n\n💬 WhatsApp us: ${wa}\n📍 Graniteside & Glen View, Harare | 🚚 Delivery across Harare\n#888homes #HarareFurniture #ZimbabweFurniture #MadeInZimbabwe #HomeDecorZW`;
+  }
+  const fmtDay = (iso) => new Date(iso + "T00:00:00");
+  const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  function renderContent() {
+    const today = todayISO();
+    const focus = CAL.find((c) => c.d >= today) || CAL[CAL.length - 1];
+    const f = dayView(focus);
+    const isToday = focus.d === today;
+    const fd = fmtDay(focus.d);
+    $("todayCard").innerHTML = `<p class="eyebrow">${isToday ? "Today's video" : focus.d > today ? "First video · " + DOW[fd.getDay()] + " " + fd.getDate() + " Nov" : "Last video"}</p>
+      <h2>${esc(f.type)}${f.boost ? " ★" : ""}</h2>
+      <div class="hook">“${esc(f.hook)}”</div>
+      <p>${esc(f.film)}</p>
+      <button class="btn small" data-act="copycap" data-d="${focus.d}">Copy caption</button>`;
+
+    const postedCount = CAL.filter((c) => posts[c.d] && posts[c.d].posted).length;
+    const msgs = CAL.reduce((n, c) => n + (Number(posts[c.d] && posts[c.d].messages) || 0), 0);
+    let best = null;
+    CAL.forEach((c) => { const m = Number(posts[c.d] && posts[c.d].messages) || 0; if (m > 0 && (!best || m > best.m)) best = { c, m }; });
+    $("contentStats").innerHTML = `
+      <div class="stat"><b>${postedCount}/30</b><span>Videos posted</span></div>
+      <div class="stat"><b>${msgs}</b><span>WhatsApp messages</span></div>
+      <div class="stat"><b>${best ? best.m : "–"}</b><span>${best ? "Best: " + esc(dayView(best.c).type) : "Best video"}</span></div>`;
+
+    let html = "";
+    [1, 2, 3, 4].forEach((w) => {
+      html += `<div class="week"><h3>${esc(WEEKS[w][0])}</h3><p class="goal">${esc(WEEKS[w][1])}</p>`;
+      CAL.filter((c) => c.w === w).forEach((raw) => {
+        const c = dayView(raw);
+        const p = posts[c.d] || {};
+        const dt = fmtDay(c.d);
+        html += `<article class="day${c.d === today ? " isToday" : ""}${p.posted ? " done" : ""}" id="day-${c.d}">
+          <div class="date"><span>${DOW[dt.getDay()]}</span><b>${dt.getDate()}</b></div>
+          <div class="what">
+            <div class="type">${esc(c.type)}${c.boost ? ' <span class="chip boost">★ Boost</span>' : ""}${c.d === today ? ' <span class="chip due">Today</span>' : ""}</div>
+            <div class="hookline">“${esc(c.hook)}”</div>
+            <div class="film">${esc(c.film)}</div>
+          </div>
+          <div class="row">
+            <button class="btn small" data-act="copycap" data-d="${c.d}">Copy caption</button>
+            <label><input type="checkbox" data-act="posted" data-d="${c.d}"${p.posted ? " checked" : ""}> Posted</label>
+            <label>WhatsApp messages <input type="number" min="0" inputmode="numeric" data-act="msgs" data-d="${c.d}" value="${p.messages != null ? esc(p.messages) : ""}"></label>
+          </div>
+        </article>`;
+      });
+      html += `</div>`;
+    });
+    $("calendar").innerHTML = html;
+  }
+
+  function copyText(text, statusEl, fallbackEl, okMsg) {
+    const done = () => { statusEl.textContent = okMsg; fallbackEl.hidden = true; };
+    const fallback = () => {
+      fallbackEl.hidden = false; fallbackEl.value = text; fallbackEl.focus(); fallbackEl.select();
+      statusEl.textContent = "The text is selected: press copy on your keyboard or long-press to copy.";
+    };
+    try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+  }
+
+  $("view-content").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-act='copycap']"); if (!b) return;
+    const c = dayView(CAL.find((x) => x.d === b.dataset.d));
+    copyText(caption(c), $("contentStatus"), $("contentFallback"), "Caption copied for " + c.type + ".");
+  });
+  $("calendar").addEventListener("change", async (e) => {
+    const el = e.target; const d = el.dataset.d; if (!d || !postsBackend) return;
+    const cur = Object.assign({ posted: false, messages: null }, posts[d]);
+    if (el.dataset.act === "posted") cur.posted = el.checked;
+    else if (el.dataset.act === "msgs") cur.messages = el.value === "" ? null : Math.max(0, Number(el.value) || 0);
+    else return;
+    try { await postsBackend.save(d, cur); }
+    catch (err) { $("contentStatus").textContent = "Couldn't save. Check your connection and try again."; }
+  });
   document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => showView(t.dataset.view)));
 
   // ---------- leads ----------
@@ -589,7 +781,9 @@ details.settings .fields { margin-top: 10px; }
       update: async (id, patch) => { leads = leads.map((l) => l.id === id ? Object.assign({}, l, patch) : l); save(); },
       remove: async (id) => { leads = leads.filter((l) => l.id !== id); save(); }
     };
-    renderLeads();
+    posts = store.get("888-posts", {});
+    postsBackend = { save: async (d, v) => { posts = Object.assign({}, posts, { [d]: v }); store.set("888-posts", posts); renderContent(); } };
+    renderLeads(); renderContent();
   }
 
   async function connect() {
@@ -610,10 +804,17 @@ details.settings .fields { margin-top: 10px; }
     }, () => {
       useLocal("The shared list stopped responding. Showing this device's list. Reload to reconnect.");
     });
+    const content = db.collection("content");
+    postsBackend = { save: async (d, v) => { await content.doc(d).set(v); } };
+    content.onSnapshot((snap) => {
+      posts = {};
+      snap.docs.forEach((d) => { posts[d.id] = d.data(); });
+      renderContent();
+    }, () => {});
   }
 
   // ---------- start ----------
-  renderPicker(); renderFields(); render(); renderLeads();
+  renderPicker(); renderFields(); render(); renderLeads(); renderContent();
   showView(store.get("888-view", "scripts"));
   connect();
 })();
