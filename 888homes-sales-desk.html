@@ -44,6 +44,7 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body {
   background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
@@ -151,6 +152,17 @@ details.settings .fields { margin-top: 10px; }
 .day .row input[type="checkbox"] { width: auto; }
 .day .row input[type="number"] { width: 72px; padding: 4px 8px; font-size: 13px; }
 .chip.boost { background: var(--brass-soft); color: var(--brass); }
+
+/* Lay-by view */
+.bar { grid-column: 1 / -1; height: 8px; background: var(--chip); border-radius: 4px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--velvet); }
+.nums { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.nums b { color: var(--ink); font-weight: 700; }
+.lbnum { font-variant-numeric: tabular-nums; color: var(--brass); font-weight: 700; margin-right: 6px; }
+.payform { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: end; background: var(--bg); border-radius: 10px; padding: 10px; }
+.payform .field { flex: 1 1 110px; }
+.paylog { grid-column: 1 / -1; font-size: 13px; color: var(--muted); margin: 0; padding-left: 18px; font-variant-numeric: tabular-nums; }
+.formerr { color: var(--due); font-size: 13px; margin: 0; min-height: 1.2em; }
 .tips { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14px; }
 
 @media (max-width: 980px) {
@@ -165,6 +177,8 @@ details.settings .fields { margin-top: 10px; }
   .fields { grid-template-columns: 1fr; }
   .lead { grid-template-columns: 1fr; }
   .lead .side { justify-items: start; }
+  .tabs { width: 100%; justify-content: space-between; gap: 2px; }
+  .tab { padding: 8px 9px; font-size: 13px; gap: 5px; }
 }
 @media (prefers-reduced-motion: no-preference) { .tab, .pick, .btn { transition: background-color .15s, color .15s; } }
 </style>
@@ -178,6 +192,7 @@ details.settings .fields { margin-top: 10px; }
     <div class="tabs" role="tablist">
       <button class="tab" role="tab" id="tab-scripts" aria-selected="true" data-view="scripts">Scripts</button>
       <button class="tab" role="tab" id="tab-follow" aria-selected="false" data-view="follow">Follow-ups <span class="badge" id="dueBadge" hidden>0</span></button>
+      <button class="tab" role="tab" id="tab-layby" aria-selected="false" data-view="layby">Lay-by <span class="badge" id="laybyBadge" hidden>0</span></button>
       <button class="tab" role="tab" id="tab-content" aria-selected="false" data-view="content">Content</button>
     </div>
   </header>
@@ -207,6 +222,9 @@ details.settings .fields { margin-top: 10px; }
           <div class="field full"><label for="set-tiktok">TikTok link</label><input id="set-tiktok" placeholder="https://www.tiktok.com/@..."></div>
           <div class="field"><label for="set-whatsapp">Shop WhatsApp number (for captions)</label><input id="set-whatsapp" inputmode="tel" placeholder="077 123 4567"></div>
           <div class="field"><label for="set-combo">Bedroom Combo price ($)</label><input id="set-combo" inputmode="numeric"></div>
+          <div class="field"><label for="set-customDeposit">Custom order deposit %</label><input id="set-customDeposit" inputmode="numeric"></div>
+          <div class="field"><label for="set-minLayby">Lay-by minimum ($)</label><input id="set-minLayby" inputmode="numeric"></div>
+          <div class="field"><label for="set-adminFee">Cancellation admin fee %</label><input id="set-adminFee" inputmode="numeric"></div>
         </div>
       </details>
     </div>
@@ -254,6 +272,37 @@ details.settings .fields { margin-top: 10px; }
     </div>
 
     <div class="group" id="leadList"></div>
+  </section>
+
+  <!-- LAY-BY -->
+  <section id="view-layby" class="follow" hidden>
+    <div class="panel">
+      <h2>Start a lay-by</h2>
+      <p class="banner" id="laybyOff" hidden>Lay-by isn't switched on in Shop settings yet, so the scripts don't mention it. You can still record lay-bys here.</p>
+      <p class="hint" id="laybyRules"></p>
+      <form id="laybyForm" class="fields" novalidate>
+        <div class="field"><label for="lb-name">Customer name</label><input id="lb-name"></div>
+        <div class="field"><label for="lb-phone">WhatsApp number</label><input id="lb-phone" inputmode="tel" placeholder="077 123 4567"></div>
+        <div class="field full"><label for="lb-item">Item</label><input id="lb-item" placeholder="Grey suede sofa lounge"></div>
+        <div class="field"><label for="lb-total">Total price ($)</label><input id="lb-total" inputmode="decimal"></div>
+        <div class="field"><label for="lb-kind">Type</label><select id="lb-kind"><option value="standard">Standard item</option><option value="custom">Custom order</option></select></div>
+        <div class="field"><label for="lb-deposit">Deposit paid ($)</label><input id="lb-deposit" inputmode="decimal"></div>
+        <div class="field"><label for="lb-method">Paid by</label><select id="lb-method"><option>Cash</option><option>EcoCash</option><option>InnBucks</option><option>WorldRemit</option></select></div>
+        <div class="field"><label for="lb-start">Start date</label><input id="lb-start" type="date"></div>
+        <div class="field full"><p class="formerr" id="laybyErr"></p><button class="btn primary" type="submit">Start lay-by</button></div>
+      </form>
+      <p class="status" id="laybyStatus" aria-live="polite"></p>
+      <div>
+        <p class="eyebrow">Every Monday</p>
+        <ol class="routine">
+          <li>Send a reminder to everyone marked <b>No payment</b> or <b>Overdue</b>.</li>
+          <li>Book collection or delivery for everyone <b>Fully paid</b>.</li>
+          <li>Release items only when the balance is $0.</li>
+        </ol>
+      </div>
+      <textarea id="laybyFallback" rows="4" hidden aria-label="Message text to copy"></textarea>
+    </div>
+    <div class="group" id="laybyList"></div>
   </section>
 
   <!-- CONTENT -->
@@ -317,15 +366,16 @@ details.settings .fields { margin-top: 10px; }
   // ---------- settings ----------
   const DEFAULTS = {
     layby: false, deposit: "40", laydays: "60", offerEnd: "15 December", ready: "",
-    fabrics: "velvet, suede or leatherette", cheapItem: "$55 headboard", tiktok: "", whatsapp: "", combo: "399"
+    fabrics: "velvet, suede or leatherette", cheapItem: "$55 headboard", tiktok: "", whatsapp: "", combo: "399",
+    customDeposit: "50", minLayby: "100", adminFee: "10"
   };
   const settings = Object.assign({}, DEFAULTS, store.get("888-settings", {}));
-  ["deposit", "laydays", "offerEnd", "ready", "fabrics", "cheapItem", "tiktok", "whatsapp", "combo"].forEach((k) => {
+  ["deposit", "laydays", "offerEnd", "ready", "fabrics", "cheapItem", "tiktok", "whatsapp", "combo", "customDeposit", "minLayby", "adminFee"].forEach((k) => {
     const el = $("set-" + k); el.value = settings[k];
-    el.addEventListener("input", () => { settings[k] = el.value; store.set("888-settings", settings); render(); renderContent(); });
+    el.addEventListener("input", () => { settings[k] = el.value; store.set("888-settings", settings); render(); renderContent(); renderLayby(); });
   });
   $("set-layby").checked = !!settings.layby;
-  $("set-layby").addEventListener("change", (e) => { settings.layby = e.target.checked; store.set("888-settings", settings); render(); renderContent(); });
+  $("set-layby").addEventListener("change", (e) => { settings.layby = e.target.checked; store.set("888-settings", settings); render(); renderContent(); renderLayby(); });
 
   // ---------- scripts ----------
   // Fields each script needs. Labels show in the preview as [Label] until filled.
@@ -503,6 +553,7 @@ details.settings .fields { margin-top: 10px; }
     $("view-scripts").hidden = v !== "scripts";
     $("view-follow").hidden = v !== "follow";
     $("view-content").hidden = v !== "content";
+    $("view-layby").hidden = v !== "layby";
     store.set("888-view", v);
   }
 
@@ -633,6 +684,188 @@ details.settings .fields { margin-top: 10px; }
     else return;
     try { await postsBackend.save(d, cur); }
     catch (err) { $("contentStatus").textContent = "Couldn't save. Check your connection and try again."; }
+  });
+
+  // ---------- lay-by ----------
+  let laybys = [];
+  let laybyBackend = null;
+  let payOpen = null;      // lay-by id with the payment form open
+  let lbConfirm = null;    // { id, act: "cancel" | "delete" }
+  const num = (v, d) => { const n = Number(String(v == null ? "" : v).replace(/[^0-9.]/g, "")); return isFinite(n) && String(v).trim() !== "" ? n : d; };
+  const usd = (n) => "$" + (Math.round(n * 100) / 100).toLocaleString("en-US", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
+  function isoOf(d) { const x = new Date(d); x.setMinutes(x.getMinutes() - x.getTimezoneOffset()); return x.toISOString().slice(0, 10); }
+  function addDays(iso, n) { const d = new Date(iso + "T00:00:00"); d.setDate(d.getDate() + n); return isoOf(d); }
+  function niceDate(iso) { return iso ? new Date(iso + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : ""; }
+  const depPct = (kind) => kind === "custom" ? num(settings.customDeposit, 50) : num(settings.deposit, 40);
+
+  function lbFigures(l) {
+    const pays = l.payments || [];
+    const paid = pays.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+    const balance = Math.max(0, Math.round((Number(l.total) - paid) * 100) / 100);
+    const last = pays.reduce((m, p) => (p.date > m ? p.date : m), l.start || "");
+    return { paid, balance, last, sinceLast: daysSince(last), pct: Math.min(100, Math.round((paid / (Number(l.total) || 1)) * 100)) };
+  }
+  function lbState(l) {
+    const f = lbFigures(l);
+    if (l.status === "collected") return { key: "collected", text: "Collected", cls: "ok", action: false };
+    if (l.status === "cancelled") return { key: "cancelled", text: "Cancelled" + (l.refund != null ? " · refund " + usd(l.refund) : ""), cls: "", action: false };
+    if (f.balance <= 0) return { key: "paid", text: "Fully paid: book collection", cls: "due", action: true };
+    if (todayISO() > l.due) return { key: "overdue", text: "Overdue since " + niceDate(l.due), cls: "due", action: true };
+    if (f.sinceLast >= 14) return { key: "remind", text: "No payment for " + f.sinceLast + " days", cls: "due", action: true };
+    return { key: "ok", text: "Next payment by " + niceDate(addDays(f.last, 14)), cls: "", action: false };
+  }
+  function lbRefund(l) {
+    const f = lbFigures(l), fee = num(settings.adminFee, 10) / 100;
+    const base = l.kind === "custom" ? Math.max(0, f.paid - (Number(l.deposit) || 0)) : f.paid;
+    return Math.round(base * (1 - fee) * 100) / 100;
+  }
+  function lbMessage(l) {
+    const f = lbFigures(l), st = lbState(l), name = l.name || "there";
+    if (st.key === "paid") return { label: "Fully paid message", text: `🎉 Congratulations ${name}, your ${l.item} is FULLY PAID!\nWhen would you like to collect it, or shall we book delivery for you? 🚚` };
+    if (st.key === "remind" || st.key === "overdue") return { label: "Reminder", text: `Hi ${name} 😊 A friendly reminder about your lay-by for the ${l.item} (${l.num}).\nBalance: ${usd(f.balance)}, due by ${niceDate(l.due)}.\nAny amount helps you get closer to taking it home 🏠` };
+    const pays = l.payments || [];
+    if (pays.length <= 1) return { label: "Lay-by started message", text: `Thank you, ${name}! 🎉 Your lay-by is confirmed:\n🛋️ Item: ${l.item}\n💵 Total: ${usd(Number(l.total))} | Deposit paid: ${usd(Number(l.deposit) || 0)}\n📉 Balance: ${usd(f.balance)}\n📅 Pay by: ${niceDate(l.due)}\n🔖 Lay-by no: ${l.num}\n\nPay any amount, any time, by cash, EcoCash, InnBucks or WorldRemit. Your price is locked 🔒` };
+    const lastPay = pays[pays.length - 1];
+    return { label: "Payment receipt", text: `Payment received, thank you ${name} 🙏\n💵 Paid on ${niceDate(lastPay.date)}: ${usd(Number(lastPay.amount))}\n📉 Balance left: ${usd(f.balance)}\n📅 Due by: ${niceDate(l.due)}\nYou're almost there! 😊` };
+  }
+  function nextLbNumber() {
+    const max = laybys.reduce((m, l) => Math.max(m, parseInt(String(l.num || "").replace(/\D/g, ""), 10) || 0), 0);
+    return "LB-" + String(max + 1).padStart(3, "0");
+  }
+
+  function renderLayby() {
+    $("laybyOff").hidden = !!settings.layby;
+    $("laybyRules").textContent = `Deposit ${num(settings.deposit, 40)}% (custom orders ${num(settings.customDeposit, 50)}%), balance within ${num(settings.laydays, 60)} days, items from $${num(settings.minLayby, 100)}. Change these in Scripts → Shop settings.`;
+    const active = laybys.filter((l) => l.status !== "collected" && l.status !== "cancelled");
+    const needs = active.filter((l) => lbState(l).action);
+    const owed = active.reduce((s, l) => s + lbFigures(l).balance, 0);
+    $("laybyBadge").hidden = needs.length === 0; $("laybyBadge").textContent = needs.length;
+    const stats = `<div class="summary">
+      <div class="stat due"><b>${needs.length}</b><span>Need action</span></div>
+      <div class="stat"><b>${active.length}</b><span>Active lay-bys</span></div>
+      <div class="stat"><b>${usd(owed)}</b><span>Still to collect</span></div>
+    </div>`;
+    if (!laybys.length) {
+      $("laybyList").innerHTML = stats + `<div class="empty"><b>No lay-bys yet.</b><br>Start one with the form. Each lay-by gets a number (LB-001, LB-002…) and the desk tracks payments, balance and due date.</div>`;
+      return;
+    }
+    const card = (l) => {
+      const f = lbFigures(l), st = lbState(l), msg = lbMessage(l);
+      const closed = l.status === "collected" || l.status === "cancelled";
+      const pays = (l.payments || []).map((p) => `<li>${esc(niceDate(p.date))} · ${esc(usd(Number(p.amount)))} · ${esc(p.method || "")}</li>`).join("");
+      let actions = "";
+      if (!closed) {
+        if (f.balance > 0) actions += `<button class="btn small primary" data-lb="pay" data-id="${l.id}">Add payment</button>`;
+        else actions += `<button class="btn small primary" data-lb="collected" data-id="${l.id}">Mark collected</button>`;
+        actions += `<a class="btn small" target="_blank" rel="noopener" href="https://wa.me/${waNumber(l.phone)}?text=${encodeURIComponent(msg.text)}">WhatsApp: ${esc(msg.label)}</a>`;
+        actions += `<button class="btn small" data-lb="copy" data-id="${l.id}">Copy</button>`;
+      }
+      if (lbConfirm && lbConfirm.id === l.id) {
+        actions += lbConfirm.act === "cancel"
+          ? `<span class="meta">Refund ${esc(usd(lbRefund(l)))}${l.kind === "custom" ? " (deposit kept)" : ""} after ${num(settings.adminFee, 10)}% fee.</span><button class="btn small danger" data-lb="docancel" data-id="${l.id}">Confirm cancel</button><button class="btn small" data-lb="keep">Keep</button>`
+          : `<button class="btn small danger" data-lb="dodelete" data-id="${l.id}">Confirm delete</button><button class="btn small" data-lb="keep">Keep</button>`;
+      } else {
+        if (!closed) actions += `<button class="btn small danger" data-lb="askcancel" data-id="${l.id}">Cancel lay-by</button>`;
+        else actions += `<button class="btn small danger" data-lb="askdelete" data-id="${l.id}">Delete</button>`;
+      }
+      const form = payOpen === l.id ? `<form class="payform" data-lbform="${l.id}">
+          <div class="field"><label for="pa-${l.id}">Amount ($)</label><input id="pa-${l.id}" name="amount" inputmode="decimal" value="${f.balance}"></div>
+          <div class="field"><label for="pm-${l.id}">Paid by</label><select id="pm-${l.id}" name="method"><option>Cash</option><option>EcoCash</option><option>InnBucks</option><option>WorldRemit</option></select></div>
+          <div class="field"><label for="pd-${l.id}">Date</label><input id="pd-${l.id}" name="date" type="date" value="${todayISO()}"></div>
+          <button class="btn small primary" type="submit">Save payment</button><button class="btn small" type="button" data-lb="closepay">Close</button>
+          <p class="formerr" data-err></p>
+        </form>` : "";
+      return `<article class="lead${st.action ? " isdue" : ""}">
+        <div>
+          <div class="who"><span class="lbnum">${esc(l.num)}</span>${esc(l.name)}</div>
+          <div class="meta">${esc(l.item)} · ${l.kind === "custom" ? "Custom order" : "Standard"}${l.phone ? " · " + esc(l.phone) : ""}</div>
+        </div>
+        <div class="side"><span class="chip ${st.cls}">${esc(st.text)}</span></div>
+        <div class="bar" aria-hidden="true"><i style="width:${f.pct}%"></i></div>
+        <div class="nums"><span>Total <b>${esc(usd(Number(l.total)))}</b></span><span>Paid <b>${esc(usd(f.paid))}</b></span><span>Balance <b>${esc(usd(f.balance))}</b></span><span>Due <b>${esc(niceDate(l.due))}</b></span></div>
+        ${pays ? `<ul class="paylog">${pays}</ul>` : ""}
+        ${form}
+        <div class="row">${actions}</div>
+      </article>`;
+    };
+    const order = { paid: 0, overdue: 1, remind: 2, ok: 3, collected: 4, cancelled: 5 };
+    const sorted = laybys.slice().sort((a, b) => (order[lbState(a).key] - order[lbState(b).key]) || String(a.due).localeCompare(String(b.due)));
+    const open = sorted.filter((l) => l.status !== "collected" && l.status !== "cancelled");
+    const done = sorted.filter((l) => l.status === "collected" || l.status === "cancelled").slice(0, 15);
+    let html = stats + `<h3>Active <small>${open.length}</small></h3>` + (open.length ? open.map(card).join("") : `<div class="empty">No active lay-bys.</div>`);
+    if (done.length) html += `<h3>Finished <small>${done.length}</small></h3>` + done.map(card).join("");
+    $("laybyList").innerHTML = html;
+  }
+
+  // Suggest the minimum deposit until the user types their own
+  let depositTouched = false;
+  function suggestDeposit() {
+    if (depositTouched) return;
+    const total = num($("lb-total").value, 0);
+    $("lb-deposit").value = total ? String(Math.ceil(total * depPct($("lb-kind").value) / 100)) : "";
+  }
+  $("lb-total").addEventListener("input", suggestDeposit);
+  $("lb-kind").addEventListener("change", suggestDeposit);
+  $("lb-deposit").addEventListener("input", () => { depositTouched = $("lb-deposit").value.trim() !== ""; });
+  $("lb-start").value = todayISO();
+
+  $("laybyForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!laybyBackend) return;
+    const err = $("laybyErr"); err.textContent = "";
+    const name = $("lb-name").value.trim(), item = $("lb-item").value.trim();
+    const total = num($("lb-total").value, 0), deposit = num($("lb-deposit").value, 0);
+    const kind = $("lb-kind").value, start = $("lb-start").value || todayISO();
+    const min = num(settings.minLayby, 100), need = Math.ceil(total * depPct(kind) / 100);
+    if (!name || !item) { err.textContent = "Add the customer's name and the item."; return; }
+    if (total < min) { err.textContent = `Lay-by is for items of $${min} or more.`; return; }
+    if (deposit < need) { err.textContent = `The deposit must be at least $${need} (${depPct(kind)}% of $${total}).`; return; }
+    if (deposit > total) { err.textContent = "The deposit can't be more than the total."; return; }
+    const lb = {
+      num: nextLbNumber(), name, phone: $("lb-phone").value.trim(), item, total, kind, deposit, start,
+      due: addDays(start, num(settings.laydays, 60)), status: "active",
+      payments: [{ amount: deposit, date: start, method: $("lb-method").value }], created: Date.now()
+    };
+    try {
+      await laybyBackend.add(lb);
+      $("laybyStatus").textContent = `Started ${lb.num} for ${name}. Send them the lay-by started message.`;
+      ["lb-name", "lb-phone", "lb-item", "lb-total", "lb-deposit"].forEach((id) => { $(id).value = ""; });
+      depositTouched = false; $("lb-start").value = todayISO();
+    } catch (x) {
+      err.textContent = x && x.code === "quota_exceeded" ? "The list is full. Delete some finished lay-bys, then try again." : "Couldn't save. Check your connection and try again.";
+    }
+  });
+
+  $("laybyList").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-lb]"); if (!b) return;
+    const act = b.dataset.lb, l = laybys.find((x) => x.id === b.dataset.id);
+    if (act === "keep") { lbConfirm = null; renderLayby(); return; }
+    if (act === "closepay") { payOpen = null; renderLayby(); return; }
+    if (!l) return;
+    if (act === "pay") { payOpen = l.id; renderLayby(); const a = $("pa-" + l.id); if (a) a.focus(); return; }
+    if (act === "copy") { copyText(lbMessage(l).text, $("laybyStatus"), $("laybyFallback"), "Copied. Paste it into WhatsApp."); return; }
+    if (act === "askcancel" || act === "askdelete") { lbConfirm = { id: l.id, act: act === "askcancel" ? "cancel" : "delete" }; renderLayby(); return; }
+    try {
+      if (act === "collected") await laybyBackend.update(l.id, { status: "collected", closedOn: todayISO() });
+      if (act === "docancel") { lbConfirm = null; await laybyBackend.update(l.id, { status: "cancelled", refund: lbRefund(l), closedOn: todayISO() }); }
+      if (act === "dodelete") { lbConfirm = null; await laybyBackend.remove(l.id); }
+    } catch (x) { $("laybyStatus").textContent = "Couldn't save. Check your connection and try again."; }
+  });
+
+  $("laybyList").addEventListener("submit", async (e) => {
+    const form = e.target.closest("[data-lbform]"); if (!form) return;
+    e.preventDefault();
+    const l = laybys.find((x) => x.id === form.dataset.lbform); if (!l) return;
+    const errEl = form.querySelector("[data-err]");
+    const amount = num(form.elements.amount.value, 0), bal = lbFigures(l).balance;
+    if (amount <= 0) { errEl.textContent = "Enter the amount paid."; return; }
+    if (amount > bal) { errEl.textContent = `That's more than the balance of ${usd(bal)}.`; return; }
+    const payments = (l.payments || []).concat([{ amount, date: form.elements.date.value || todayISO(), method: form.elements.method.value }]);
+    try {
+      payOpen = null;
+      await laybyBackend.update(l.id, { payments });
+      $("laybyStatus").textContent = `Saved ${usd(amount)} for ${l.num}. Send the ${lbMessage(Object.assign({}, l, { payments })).label.toLowerCase()}.`;
+    } catch (x) { errEl.textContent = "Couldn't save. Check your connection and try again."; }
   });
   document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => showView(t.dataset.view)));
 
@@ -783,7 +1016,14 @@ details.settings .fields { margin-top: 10px; }
     };
     posts = store.get("888-posts", {});
     postsBackend = { save: async (d, v) => { posts = Object.assign({}, posts, { [d]: v }); store.set("888-posts", posts); renderContent(); } };
-    renderLeads(); renderContent();
+    laybys = store.get("888-laybys", []);
+    const saveLb = () => { store.set("888-laybys", laybys); renderLayby(); };
+    laybyBackend = {
+      add: async (l) => { laybys.push(Object.assign({ id: "b" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) }, l)); saveLb(); },
+      update: async (id, patch) => { laybys = laybys.map((l) => l.id === id ? Object.assign({}, l, patch) : l); saveLb(); },
+      remove: async (id) => { laybys = laybys.filter((l) => l.id !== id); saveLb(); }
+    };
+    renderLeads(); renderContent(); renderLayby();
   }
 
   async function connect() {
@@ -811,10 +1051,20 @@ details.settings .fields { margin-top: 10px; }
       snap.docs.forEach((d) => { posts[d.id] = d.data(); });
       renderContent();
     }, () => {});
+    const lbCol = db.collection("laybys");
+    laybyBackend = {
+      add: async (l) => { await lbCol.doc().set(l); },
+      update: async (id, patch) => { await lbCol.doc(id).update(patch); },
+      remove: async (id) => { await lbCol.doc(id).delete(); }
+    };
+    lbCol.onSnapshot((snap) => {
+      laybys = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+      renderLayby();
+    }, () => {});
   }
 
   // ---------- start ----------
-  renderPicker(); renderFields(); render(); renderLeads(); renderContent();
+  renderPicker(); renderFields(); render(); renderLeads(); renderContent(); renderLayby();
   showView(store.get("888-view", "scripts"));
   connect();
 })();
