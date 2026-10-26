@@ -1,0 +1,620 @@
+<title>888homes Sales Desk</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: brand bar with two tabs; Scripts = picker / form / WhatsApp-style preview, Follow-ups = due-first lead list */
+:root {
+  --bg: #f3f5f3;
+  --surface: #ffffff;
+  --ink: #17221f;
+  --muted: #5b6b66;
+  --line: #d9e0dc;
+  --velvet: #1f4d48;
+  --velvet-ink: #ffffff;
+  --brass: #a87a2c;
+  --brass-soft: #f4ead6;
+  --bubble: #dcf3d5;
+  --bubble-ink: #14231c;
+  --due: #b4442f;
+  --due-soft: #f8e3dd;
+  --ok: #2d7a4a;
+  --ok-soft: #dff0e4;
+  --chip: #e8eeeb;
+  --mark: #fde7a8;
+  --mark-ink: #4a3600;
+  --display: "Young Serif", Georgia, "Times New Roman", serif;
+  --body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1514; --surface: #172020; --ink: #e7eeeb; --muted: #9aaba5; --line: #2a3734;
+    --velvet: #6fb3a8; --velvet-ink: #0d1716; --brass: #d8a957; --brass-soft: #2e2617;
+    --bubble: #1e3a2c; --bubble-ink: #e3f2e8; --due: #f08a73; --due-soft: #3a1f19;
+    --ok: #7fcf9c; --ok-soft: #173023; --chip: #22302d; --mark: #5a4810; --mark-ink: #ffe9a8;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1514; --surface: #172020; --ink: #e7eeeb; --muted: #9aaba5; --line: #2a3734;
+  --velvet: #6fb3a8; --velvet-ink: #0d1716; --brass: #d8a957; --brass-soft: #2e2617;
+  --bubble: #1e3a2c; --bubble-ink: #e3f2e8; --due: #f08a73; --due-soft: #3a1f19;
+  --ok: #7fcf9c; --ok-soft: #173023; --chip: #22302d; --mark: #5a4810; --mark-ink: #ffe9a8;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 48px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 20px; }
+header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; }
+.brand h1 { font-family: var(--display); font-weight: 400; font-size: 30px; margin: 0; line-height: 1.1; text-wrap: balance; }
+.brand h1 span { color: var(--brass); }
+.brand p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+.tabs { display: flex; gap: 6px; background: var(--chip); padding: 4px; border-radius: 999px; }
+.tab { border: 0; background: transparent; color: var(--ink); font: 600 14px var(--body); padding: 8px 16px; border-radius: 999px; cursor: pointer; display: inline-flex; gap: 8px; align-items: center; }
+.tab[aria-selected="true"] { background: var(--velvet); color: var(--velvet-ink); }
+.badge { background: var(--due); color: #fff; font-size: 12px; min-width: 20px; height: 20px; border-radius: 10px; display: inline-grid; place-items: center; padding: 0 6px; font-variant-numeric: tabular-nums; }
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+.banner { background: var(--brass-soft); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+
+/* Scripts view */
+.scripts { display: grid; grid-template-columns: 250px minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.panel h2 { font-family: var(--display); font-weight: 400; font-size: 19px; margin: 0; }
+.eyebrow { text-transform: uppercase; letter-spacing: .08em; font-size: 11px; font-weight: 700; color: var(--muted); margin: 0; }
+.picker { display: grid; gap: 4px; }
+.pick { text-align: left; border: 0; background: transparent; color: var(--ink); font: 500 14px var(--body); padding: 8px 10px; border-radius: 8px; cursor: pointer; display: grid; grid-template-columns: 26px 1fr; gap: 4px; align-items: baseline; }
+.pick small { grid-column: 2; color: var(--muted); font-size: 12px; font-weight: 400; }
+.pick .n { color: var(--brass); font-variant-numeric: tabular-nums; font-weight: 700; }
+.pick:hover { background: var(--chip); }
+.pick[aria-current="true"] { background: var(--velvet); color: var(--velvet-ink); }
+.pick[aria-current="true"] small, .pick[aria-current="true"] .n { color: inherit; opacity: .85; }
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field.full { grid-column: 1 / -1; }
+label { font-size: 12px; font-weight: 600; color: var(--muted); }
+input, select, textarea { font: 15px var(--body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%; min-width: 0; }
+.toggle { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+.toggle input { width: auto; }
+details.settings { border-top: 1px solid var(--line); padding-top: 10px; }
+details.settings summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+details.settings .fields { margin-top: 10px; }
+.hint { font-size: 13px; color: var(--muted); margin: 0; }
+
+.phone { background: var(--chip); border-radius: 14px; padding: 16px; display: grid; gap: 12px; }
+.bubble { background: var(--bubble); color: var(--bubble-ink); border-radius: 12px 12px 4px 12px; padding: 12px 14px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; box-shadow: 0 1px 0 rgba(0,0,0,.08); }
+.bubble mark { background: var(--mark); color: var(--mark-ink); border-radius: 4px; padding: 0 3px; }
+.tip { font-size: 13px; color: var(--muted); margin: 0; }
+.missing { font-size: 13px; color: var(--due); margin: 0; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn { border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 600 14px var(--body); padding: 9px 14px; border-radius: 999px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn.primary { background: var(--velvet); color: var(--velvet-ink); border-color: var(--velvet); }
+.btn.brass { background: var(--brass); color: #fff; border-color: var(--brass); }
+.btn.small { padding: 6px 11px; font-size: 13px; }
+.btn.danger { color: var(--due); }
+.btn:hover { filter: brightness(1.05); }
+.status { font-size: 13px; color: var(--ok); min-height: 1.2em; margin: 0; }
+.loaded { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; background: var(--brass-soft); border-radius: 10px; padding: 8px 12px; font-size: 14px; }
+
+/* Follow-ups view */
+.follow { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 20px; align-items: start; }
+.summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.stat b { display: block; font-family: var(--display); font-weight: 400; font-size: 26px; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.stat span { font-size: 12px; color: var(--muted); }
+.stat.due b { color: var(--due); }
+.group { display: grid; gap: 10px; }
+.group h3 { font-family: var(--display); font-weight: 400; font-size: 18px; margin: 8px 0 0; display: flex; gap: 8px; align-items: baseline; }
+.group h3 small { font-family: var(--body); color: var(--muted); font-size: 13px; }
+.lead { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 14px; align-items: start; }
+.lead.isdue { border-left: 4px solid var(--due); }
+.lead .who { font-weight: 700; }
+.lead .meta { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.chip { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; background: var(--chip); color: var(--ink); }
+.chip.due { background: var(--due-soft); color: var(--due); }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.lead .side { display: grid; gap: 6px; justify-items: end; }
+.lead .row { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.lead select { width: auto; padding: 5px 8px; font-size: 13px; }
+.empty { background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; padding: 24px; text-align: center; color: var(--muted); }
+.routine { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14px; }
+
+@media (max-width: 980px) {
+  .scripts { grid-template-columns: 1fr 1fr; }
+  .scripts .pickpanel { grid-column: 1 / -1; }
+  .picker { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .follow { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .scripts { grid-template-columns: 1fr; }
+  .fields { grid-template-columns: 1fr; }
+  .lead { grid-template-columns: 1fr; }
+  .lead .side { justify-items: start; }
+}
+@media (prefers-reduced-motion: no-preference) { .tab, .pick, .btn { transition: background-color .15s, color .15s; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>888<span>homes</span> Sales Desk</h1>
+      <p>WhatsApp scripts and follow-ups for Graniteside &amp; Glen View</p>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="tab-scripts" aria-selected="true" data-view="scripts">Scripts</button>
+      <button class="tab" role="tab" id="tab-follow" aria-selected="false" data-view="follow">Follow-ups <span class="badge" id="dueBadge" hidden>0</span></button>
+    </div>
+  </header>
+
+  <!-- SCRIPTS -->
+  <section id="view-scripts" class="scripts">
+    <div class="panel pickpanel">
+      <p class="eyebrow">Choose a message</p>
+      <div class="picker" id="picker"></div>
+    </div>
+
+    <div class="panel">
+      <div class="loaded" id="loadedLead" hidden></div>
+      <h2 id="scriptTitle">Reply to "How much?"</h2>
+      <p class="hint" id="scriptWhen"></p>
+      <div class="fields" id="fields"></div>
+      <details class="settings" id="settingsBox">
+        <summary>Shop settings (saved on this device)</summary>
+        <div class="fields">
+          <div class="field full toggle"><input type="checkbox" id="set-layby"><label for="set-layby" style="font-size:14px;color:var(--ink)">Lay-by is launched (include lay-by lines)</label></div>
+          <div class="field"><label for="set-deposit">Lay-by deposit %</label><input id="set-deposit" inputmode="numeric"></div>
+          <div class="field"><label for="set-laydays">Lay-by days to pay</label><input id="set-laydays" inputmode="numeric"></div>
+          <div class="field"><label for="set-offerEnd">Festive offer ends</label><input id="set-offerEnd"></div>
+          <div class="field"><label for="set-ready">Ready in (days)</label><input id="set-ready" inputmode="numeric"></div>
+          <div class="field full"><label for="set-fabrics">Fabric options</label><input id="set-fabrics"></div>
+          <div class="field full"><label for="set-cheapItem">Budget option</label><input id="set-cheapItem"></div>
+          <div class="field full"><label for="set-tiktok">TikTok link</label><input id="set-tiktok" placeholder="https://www.tiktok.com/@..."></div>
+        </div>
+      </details>
+    </div>
+
+    <div class="panel">
+      <p class="eyebrow">Message preview</p>
+      <div class="phone"><div class="bubble" id="preview"></div></div>
+      <p class="missing" id="missing"></p>
+      <p class="tip" id="tip"></p>
+      <div class="actions">
+        <button class="btn primary" id="copyBtn">Copy message</button>
+        <a class="btn brass" id="waBtn" href="https://wa.me/" target="_blank" rel="noopener">Open in WhatsApp</a>
+        <button class="btn" id="markSentBtn" hidden>Mark as sent</button>
+      </div>
+      <p class="status" id="copyStatus" aria-live="polite"></p>
+      <textarea id="copyFallback" rows="4" hidden aria-label="Message text to copy"></textarea>
+    </div>
+  </section>
+
+  <!-- FOLLOW-UPS -->
+  <section id="view-follow" class="follow" hidden>
+    <div class="panel">
+      <h2>Add an enquiry</h2>
+      <p class="hint">Add every customer who asks for a price. The desk tells you who to follow up each day.</p>
+      <form id="leadForm" class="fields">
+        <div class="field"><label for="lf-name">Customer name</label><input id="lf-name" required></div>
+        <div class="field"><label for="lf-phone">WhatsApp number</label><input id="lf-phone" inputmode="tel" placeholder="077 123 4567"></div>
+        <div class="field full"><label for="lf-item">Item they asked about</label><input id="lf-item" required placeholder="Velvet design headboard"></div>
+        <div class="field"><label for="lf-price">Price quoted ($)</label><input id="lf-price" inputmode="decimal"></div>
+        <div class="field"><label for="lf-date">Enquiry date</label><input id="lf-date" type="date"></div>
+        <div class="field"><label for="lf-shop">Shop</label><select id="lf-shop"><option>Graniteside</option><option>Glen View</option></select></div>
+        <div class="field"><label for="lf-source">Came from</label><select id="lf-source"><option>TikTok</option><option>Facebook</option><option>Walk-in</option><option>Referral</option><option>Other</option></select></div>
+        <div class="field full"><button class="btn primary" type="submit">Add to follow-ups</button></div>
+      </form>
+      <p class="status" id="leadStatus" aria-live="polite"></p>
+      <div>
+        <p class="eyebrow">Evening routine (15 minutes)</p>
+        <ol class="routine">
+          <li>Reply to new enquiries with Script 2, then add them here.</li>
+          <li>Send every message in <b>Due today</b>.</li>
+          <li>Ask today's deliveries for a photo or review.</li>
+        </ol>
+      </div>
+      <p class="hint" id="storeNote">Connecting to the shared list…</p>
+    </div>
+
+    <div class="group" id="leadList"></div>
+  </section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- helpers ----------
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  function todayISO() { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
+  function daysSince(iso) {
+    if (!iso) return 0;
+    const a = new Date(iso + "T00:00:00"), b = new Date(todayISO() + "T00:00:00");
+    return Math.round((b - a) / 86400000);
+  }
+  function waNumber(raw) {
+    let d = String(raw || "").replace(/\D/g, "");
+    if (!d) return "";
+    if (d.startsWith("00")) d = d.slice(2);
+    if (d.startsWith("0")) d = "263" + d.slice(1);
+    else if (d.length === 9 && d.startsWith("7")) d = "263" + d;
+    return d;
+  }
+  function money(v) { const s = String(v || "").trim(); return s ? s.replace(/^\$/, "") : ""; }
+
+  // ---------- settings ----------
+  const DEFAULTS = {
+    layby: false, deposit: "40", laydays: "60", offerEnd: "15 December", ready: "",
+    fabrics: "velvet, suede or leatherette", cheapItem: "$55 headboard", tiktok: ""
+  };
+  const settings = Object.assign({}, DEFAULTS, store.get("888-settings", {}));
+  ["deposit", "laydays", "offerEnd", "ready", "fabrics", "cheapItem", "tiktok"].forEach((k) => {
+    const el = $("set-" + k); el.value = settings[k];
+    el.addEventListener("input", () => { settings[k] = el.value; store.set("888-settings", settings); render(); });
+  });
+  $("set-layby").checked = !!settings.layby;
+  $("set-layby").addEventListener("change", (e) => { settings.layby = e.target.checked; store.set("888-settings", settings); render(); });
+
+  // ---------- scripts ----------
+  // Fields each script needs. Labels show in the preview as [Label] until filled.
+  const FIELD_DEFS = {
+    name: { label: "Name", input: "Customer name" },
+    phone: { label: "Phone", input: "WhatsApp number" },
+    item: { label: "item", input: "Item" },
+    price: { label: "price", input: "Price ($)" },
+    area: { label: "area", input: "Delivery area (e.g. Avondale)" },
+    showroom: { label: "showroom", input: "Showroom" },
+    paid: { label: "amount", input: "Paid ($)" },
+    balance: { label: "amount", input: "Balance ($)" },
+    date: { label: "date", input: "Ready / delivery date" },
+    pastArea: { label: "area", input: "Where you delivered the last one" }
+  };
+
+  const SCRIPTS = [
+    {
+      id: "greeting", title: "Greeting message", when: "Set once in WhatsApp Business → Business tools → Greeting message.",
+      fields: [], tip: "Set it once and WhatsApp sends it automatically to new chats.",
+      text: (f) => `Hi 👋 Welcome to *888homes Furniture*!\nWe make stylish, quality furniture in our own Harare workshop: headboards, sofas, beds, wardrobes and more, custom-made in your choice of colour and fabric.\n\n📍 Showrooms: Graniteside & Glen View\nTell us which item you're interested in and we'll send photos, prices and options right away 😊`
+    },
+    {
+      id: "price", title: "Reply to \"How much?\"", when: "When someone asks for a price. Never send the price alone.",
+      fields: ["name", "phone", "item", "price"], tip: "Send 1–2 real photos or a short video with this message. Ending with a question keeps the chat going.",
+      text: (f) => `Hi ${f("name")} 😊 Thank you for your interest!\n\nThis *${f("item")}* is *$${f("price")}*.\n✅ Made in our own Harare workshop\n✅ Available in ${f("fabrics")} in any colour you like\n✅ Ready in ${f("ready", "X")} days, with delivery across Harare\n\nWhich *colour* would suit your room? 😊`
+    },
+    {
+      id: "expensive", title: "\"It's too expensive\"", when: "When the customer says the price is high.",
+      fields: ["name", "phone"], tip: "Offer a way to say yes instead of dropping the price.",
+      text: (f) => settings.layby
+        ? `I understand, ${f("name")} 🙏 Our pieces are made with solid frames and quality fabrics so they last for years, not months. That's why our customers keep coming back.\n\nTo help, here are 2 options:\n1️⃣ *Lay-by*: pay a ${f("deposit")}% deposit now and the rest within ${f("laydays")} days\n2️⃣ Our *${f("cheapItem")}*, the same quality in a simpler design\n\nWhich works better for you?`
+        : `I understand, ${f("name")} 🙏 Our pieces are made with solid frames and quality fabrics so they last for years, not months. That's why our customers keep coming back.\n\nIf you'd like something lighter on the budget, our *${f("cheapItem")}* has the same quality in a simpler design.\n\nWould that work for you?`
+    },
+    {
+      id: "comeback", title: "\"I'll come back to you\"", when: "When the customer goes quiet or says they'll think about it.",
+      fields: ["name", "phone", "item"], tip: "Then add them on the Follow-ups tab so the desk reminds you on day 2, 5 and 10.",
+      text: (f) => `No problem at all, ${f("name")} 😊 Take your time.\nJust so you know, our *festive prices are only on until ${f("offerEnd")}*` +
+        (settings.layby ? `, and you can secure your ${f("item")} now with a deposit on *lay-by*.` : `.`) +
+        `\n\nIs there anything you'd like to know to help you decide, such as size, colour or delivery? 🙏`
+    },
+    {
+      id: "d2", title: "Follow-up: day 2", when: "Two days after the enquiry, if they haven't bought.",
+      fields: ["name", "phone", "item", "pastArea"], tip: "Attach a NEW photo or delivery video of the same item, not the one you sent before.",
+      text: (f) => `Hi ${f("name")} 👋 Just wanted to share this: we delivered this *${f("item")}* to a happy customer in ${f("pastArea")} yesterday 😍\n\nAre you still interested in the ${f("item")}? I can reserve one for you 😊`
+    },
+    {
+      id: "d5", title: "Follow-up: day 5", when: "Five days after the enquiry. Find out what is holding them back.",
+      fields: ["name", "phone", "item", "showroom"], tip: "Whatever they answer tells you how to close the sale.",
+      text: (f) => `Hi ${f("name")} 😊 Quick question: is anything holding you back on the ${f("item")}?\n` +
+        (settings.layby ? `• Budget? 👉 We now offer *lay-by* (${f("deposit")}% deposit, balance in ${f("laydays")} days)\n` : `• Budget? 👉 Tell me your budget and I'll show you options that fit\n`) +
+        `• Worried about quality? 👉 You're welcome to visit our showroom in *${f("showroom")}* and see it in person\n• Delivery? 👉 We deliver across Harare\n\nJust reply and I'll help 🙏`
+    },
+    {
+      id: "d10", title: "Follow-up: day 10 (last)", when: "Ten days after the enquiry. The last message. If there's no reply, stop.",
+      fields: ["name", "phone", "item", "price"], tip: "No reply? Close the lead and add the number to your broadcast list for future offers.",
+      text: (f) => `Hi ${f("name")}, one last message from me 🙂\nOur festive price on the *${f("item")}* ends on *${f("offerEnd")}*. After that it goes back to $${f("price")}.\nWould you like me to reserve one for you? 😊`
+    },
+    {
+      id: "confirm", title: "Order confirmed", when: "As soon as the customer pays (full amount or deposit).",
+      fields: ["name", "phone", "item", "paid", "balance", "date", "area"], tip: "Send a photo of their actual piece before delivery. It removes the \"will it match the photo?\" worry.",
+      text: (f) => `Thank you so much, ${f("name")}! 🎉 Your order is confirmed:\n🛋️ Item: ${f("item")}\n💵 Paid: $${f("paid")} | Balance: $${f("balance")}\n📅 Ready / delivery: ${f("date")}\n📍 Delivery to: ${f("area")}\n\nWe'll send you a photo before delivery. Welcome to the 888homes family ❤️`
+    },
+    {
+      id: "review", title: "After delivery: ask for a review", when: "The day after delivery.",
+      fields: ["name", "phone", "item"], tip: "Ask permission, then post their photo or video. That's your trust content.",
+      text: (f) => `Hi ${f("name")} 😊 We hope you're enjoying your new ${f("item")}!\nCould you do us a small favour? Please send us *a photo of it in your room*, or a short voice note or video about your experience 🙏\nIt helps other customers trust us, and we really appreciate it ❤️`
+    },
+    {
+      id: "away", title: "Away message", when: "Set once in WhatsApp Business → Business tools → Away message.",
+      fields: [], tip: "Set your working hours so it only goes out when you're closed.",
+      text: (f) => `Hi 👋 Thanks for contacting *888homes Furniture*! We're closed right now but will reply first thing in the morning.\nIn the meantime, check out our latest designs on TikTok 👉 ${f("tiktok", "TikTok link")} 😊`
+    }
+  ];
+  const SCRIPT_BY_ID = Object.fromEntries(SCRIPTS.map((s) => [s.id, s]));
+
+  // Current form values (shared across scripts so switching keeps what you typed)
+  const values = { name: "", phone: "", item: "velvet design headboard", price: "150", area: "", showroom: "Graniteside", paid: "", balance: "", date: "", pastArea: "" };
+  let current = "price";
+  let loadedLead = null; // { id, step }
+
+  function build(script) {
+    const missing = new Set();
+    const MARK_L = "\u0001", MARK_R = "\u0002";
+    const f = (key, fallbackLabel) => {
+      let v = key in values ? values[key] : settings[key];
+      if (key === "price" || key === "paid" || key === "balance") v = money(v);
+      v = String(v == null ? "" : v).trim();
+      if (v) return v;
+      const label = fallbackLabel || (FIELD_DEFS[key] && FIELD_DEFS[key].label) || key;
+      missing.add(label);
+      return MARK_L + label + MARK_R;
+    };
+    const raw = script.text(f);
+    const plain = raw.replace(/\u0001(.*?)\u0002/g, "[$1]");
+    const html = esc(raw).replace(/\u0001(.*?)\u0002/g, "<mark>[$1]</mark>");
+    return { plain, html, missing: [...missing] };
+  }
+
+  function renderPicker() {
+    $("picker").innerHTML = SCRIPTS.map((s, i) =>
+      `<button class="pick" data-id="${s.id}" aria-current="${s.id === current}"><span class="n">${i + 1}</span><span>${esc(s.title)}</span></button>`
+    ).join("");
+  }
+  $("picker").addEventListener("click", (e) => {
+    const b = e.target.closest(".pick"); if (!b) return;
+    current = b.dataset.id; renderPicker(); renderFields(); render();
+  });
+
+  function renderFields() {
+    const s = SCRIPT_BY_ID[current];
+    $("scriptTitle").textContent = s.title;
+    $("scriptWhen").textContent = s.when;
+    $("fields").innerHTML = s.fields.length ? s.fields.map((k) => {
+      const d = FIELD_DEFS[k];
+      const full = (k === "item") ? " full" : "";
+      return `<div class="field${full}"><label for="fv-${k}">${esc(d.input)}</label><input id="fv-${k}" data-key="${k}" value="${esc(values[k] || "")}"${k === "phone" ? ' inputmode="tel" placeholder="077 123 4567"' : ""}></div>`;
+    }).join("") : `<p class="hint field full">No details needed. Copy it into WhatsApp Business once.</p>`;
+  }
+  $("fields").addEventListener("input", (e) => {
+    const k = e.target.dataset.key; if (!k) return;
+    values[k] = e.target.value; render();
+  });
+
+  function render() {
+    const s = SCRIPT_BY_ID[current];
+    const out = build(s);
+    $("preview").innerHTML = out.html;
+    $("missing").textContent = out.missing.length ? "Fill in before sending: " + out.missing.join(", ") : "";
+    $("tip").textContent = s.tip;
+    const num = waNumber(values.phone);
+    $("waBtn").href = "https://wa.me/" + num + "?text=" + encodeURIComponent(out.plain);
+    $("waBtn").textContent = num ? "Open in WhatsApp" : "Open in WhatsApp (choose chat)";
+    const lead = loadedLead && leads.find((l) => l.id === loadedLead.id);
+    if (lead) {
+      $("loadedLead").hidden = false;
+      $("loadedLead").innerHTML = `<span>Writing to <b>${esc(lead.name)}</b> · ${esc(lead.item || "")}</span><button class="btn small" id="unloadBtn">Clear customer</button>`;
+      const step = STEP_FOR_SCRIPT[current];
+      $("markSentBtn").hidden = !step;
+      $("markSentBtn").textContent = step && lead.sent && lead.sent[step] ? "Sent ✓" : "Mark as sent";
+    } else {
+      $("loadedLead").hidden = true;
+      $("markSentBtn").hidden = true;
+    }
+  }
+
+  $("loadedLead").addEventListener("click", (e) => {
+    if (e.target.id !== "unloadBtn") return;
+    loadedLead = null;
+    Object.assign(values, { name: "", phone: "", price: "", area: "" });
+    renderFields(); render();
+  });
+
+  $("copyBtn").addEventListener("click", () => {
+    const text = build(SCRIPT_BY_ID[current]).plain;
+    const done = () => { $("copyStatus").textContent = "Copied. Paste it into WhatsApp."; $("copyFallback").hidden = true; };
+    const fallback = () => {
+      const ta = $("copyFallback"); ta.hidden = false; ta.value = text; ta.focus(); ta.select();
+      $("copyStatus").textContent = "Select-all is ready: press copy on your keyboard or long-press to copy.";
+    };
+    try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+  });
+
+  $("markSentBtn").addEventListener("click", async () => {
+    const step = STEP_FOR_SCRIPT[current];
+    const lead = loadedLead && leads.find((l) => l.id === loadedLead.id);
+    if (!step || !lead) return;
+    await markSent(lead, step);
+    $("copyStatus").textContent = "Marked as sent for " + lead.name + ".";
+  });
+
+  // ---------- tabs ----------
+  function showView(v) {
+    document.querySelectorAll(".tab").forEach((t) => t.setAttribute("aria-selected", String(t.dataset.view === v)));
+    $("view-scripts").hidden = v !== "scripts";
+    $("view-follow").hidden = v !== "follow";
+    store.set("888-view", v);
+  }
+  document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => showView(t.dataset.view)));
+
+  // ---------- leads ----------
+  const STAGES = [
+    ["follow", "Following up"], ["layby", "On lay-by"], ["paid", "Paid"], ["delivered", "Delivered"], ["closed", "Closed"]
+  ];
+  const STAGE_LABEL = Object.fromEntries(STAGES);
+  const STEP_FOR_SCRIPT = { d2: "d2", d5: "d5", d10: "d10", confirm: "confirm", review: "review" };
+  const STEP_TEXT = { d2: "Day 2 follow-up", d5: "Day 5 follow-up", d10: "Day 10 last message", confirm: "Order confirmation", review: "Review request" };
+  let leads = [];
+  let backend = null; // { add, update, remove }
+  let confirmDelete = null;
+
+  function nextAction(l) {
+    const sent = l.sent || {};
+    const days = daysSince(l.enquired);
+    if (l.stage === "follow") {
+      for (const [step, day] of [["d2", 2], ["d5", 5], ["d10", 10]]) {
+        if (sent[step]) continue;
+        if (days >= day) return { step, due: true };
+        return { step, due: false, inDays: day - days };
+      }
+      return { step: null, due: true, text: "No reply after day 10: close it and add to broadcast list" };
+    }
+    if (l.stage === "paid" && !sent.confirm) return { step: "confirm", due: true };
+    if (l.stage === "delivered" && !sent.review) return { step: "review", due: true };
+    return null;
+  }
+
+  function renderLeads() {
+    const box = $("leadList");
+    const active = leads.filter((l) => l.stage !== "closed");
+    const withAct = active.map((l) => ({ l, a: nextAction(l) }));
+    const due = withAct.filter((x) => x.a && x.a.due);
+    const dueIds = new Set(due.map((x) => x.l.id));
+    const badge = $("dueBadge");
+    badge.hidden = due.length === 0; badge.textContent = due.length;
+
+    const following = active.filter((l) => l.stage === "follow").length;
+    const won = leads.filter((l) => l.stage === "paid" || l.stage === "delivered" || l.stage === "layby").length;
+    const stats = `<div class="summary">
+      <div class="stat due"><b>${due.length}</b><span>Due today</span></div>
+      <div class="stat"><b>${following}</b><span>Following up</span></div>
+      <div class="stat"><b>${won}</b><span>Sold or on lay-by</span></div>
+    </div>`;
+
+    if (!leads.length) {
+      box.innerHTML = stats + `<div class="empty"><b>No enquiries yet.</b><br>Add your first customer with the form. Their day 2, 5 and 10 follow-ups will show up here when they're due.</div>`;
+      return;
+    }
+
+    const card = (l) => {
+      const a = nextAction(l);
+      const days = daysSince(l.enquired);
+      const price = money(l.price);
+      let chip = "";
+      if (a && a.step) chip = a.due ? `<span class="chip due">${STEP_TEXT[a.step]} due</span>` : `<span class="chip">${STEP_TEXT[a.step]} in ${a.inDays} day${a.inDays === 1 ? "" : "s"}</span>`;
+      else if (a && a.text) chip = `<span class="chip due">${esc(a.text)}</span>`;
+      else if (l.stage === "delivered" || l.stage === "paid") chip = `<span class="chip ok">${STAGE_LABEL[l.stage]}</span>`;
+      const stageSel = `<select data-act="stage" data-id="${l.id}" aria-label="Stage for ${esc(l.name)}">${STAGES.map(([k, t]) => `<option value="${k}"${k === l.stage ? " selected" : ""}>${t}</option>`).join("")}</select>`;
+      const writeBtn = a && a.step ? `<button class="btn small primary" data-act="write" data-id="${l.id}" data-step="${a.step}">Write ${STEP_TEXT[a.step].toLowerCase()}</button>` : "";
+      const markBtn = a && a.step && a.due ? `<button class="btn small" data-act="mark" data-id="${l.id}" data-step="${a.step}">Mark sent</button>` : "";
+      const delBtn = confirmDelete === l.id
+        ? `<button class="btn small danger" data-act="delete" data-id="${l.id}">Confirm delete</button><button class="btn small" data-act="canceldel">Keep</button>`
+        : `<button class="btn small danger" data-act="askdelete" data-id="${l.id}">Delete</button>`;
+      return `<article class="lead${dueIds.has(l.id) ? " isdue" : ""}">
+        <div>
+          <div class="who">${esc(l.name)}</div>
+          <div class="meta">${esc(l.item || "")}${price ? " · $" + esc(price) : ""}${l.phone ? " · " + esc(l.phone) : ""}</div>
+          <div class="meta">${esc(l.shop || "")}${l.source ? " · via " + esc(l.source) : ""} · asked ${days === 0 ? "today" : days === 1 ? "yesterday" : days + " days ago"}</div>
+        </div>
+        <div class="side">${chip}${stageSel}</div>
+        <div class="row">${writeBtn}${markBtn}${delBtn}</div>
+      </article>`;
+    };
+
+    const sorted = (arr) => arr.slice().sort((a, b) => String(a.enquired).localeCompare(String(b.enquired)));
+    const dueList = sorted(due.map((x) => x.l));
+    const rest = sorted(active.filter((l) => !dueIds.has(l.id)));
+    const closed = sorted(leads.filter((l) => l.stage === "closed")).reverse().slice(0, 10);
+    let html = stats;
+    html += `<h3>Due today <small>${dueList.length}</small></h3>` + (dueList.length ? dueList.map(card).join("") : `<div class="empty">Nothing due. Nice work.</div>`);
+    if (rest.length) html += `<h3>Coming up <small>${rest.length}</small></h3>` + rest.map(card).join("");
+    if (closed.length) html += `<h3>Recently closed <small>${closed.length}</small></h3>` + closed.map(card).join("");
+    box.innerHTML = html;
+  }
+
+  async function markSent(lead, step) {
+    const sent = Object.assign({}, lead.sent || {}, { [step]: todayISO() });
+    await backend.update(lead.id, { sent });
+  }
+
+  $("leadList").addEventListener("click", async (e) => {
+    const b = e.target.closest("button[data-act]"); if (!b) return;
+    const lead = leads.find((l) => l.id === b.dataset.id);
+    const act = b.dataset.act;
+    if (act === "canceldel") { confirmDelete = null; renderLeads(); return; }
+    if (!lead) return;
+    if (act === "askdelete") { confirmDelete = lead.id; renderLeads(); return; }
+    if (act === "delete") { confirmDelete = null; await backend.remove(lead.id); return; }
+    if (act === "mark") { await markSent(lead, b.dataset.step); return; }
+    if (act === "write") {
+      loadedLead = { id: lead.id };
+      Object.assign(values, { name: lead.name || "", phone: lead.phone || "", item: lead.item || "", price: money(lead.price), showroom: lead.shop || values.showroom });
+      current = b.dataset.step;
+      renderPicker(); renderFields(); render(); showView("scripts");
+      window.scrollTo({ top: 0 });
+    }
+  });
+  $("leadList").addEventListener("change", async (e) => {
+    const s = e.target.closest("select[data-act='stage']"); if (!s) return;
+    await backend.update(s.dataset.id, { stage: s.value });
+  });
+
+  $("lf-date").value = todayISO();
+  $("leadForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!backend) return;
+    const lead = {
+      name: $("lf-name").value.trim(), phone: $("lf-phone").value.trim(), item: $("lf-item").value.trim(),
+      price: money($("lf-price").value), enquired: $("lf-date").value || todayISO(),
+      shop: $("lf-shop").value, source: $("lf-source").value, stage: "follow", sent: {}, created: Date.now()
+    };
+    if (!lead.name || !lead.item) return;
+    try {
+      await backend.add(lead);
+      $("leadStatus").textContent = "Added " + lead.name + ".";
+      ["lf-name", "lf-phone", "lf-item", "lf-price"].forEach((id) => { $(id).value = ""; });
+      $("lf-date").value = todayISO();
+      $("lf-name").focus();
+    } catch (err) {
+      $("leadStatus").textContent = err && err.code === "quota_exceeded"
+        ? "The list is full. Delete some closed customers, then try again."
+        : "Couldn't save. Check your connection and try again.";
+    }
+  });
+
+  // Local fallback: this device only
+  function useLocal(reason) {
+    $("storeNote").textContent = reason;
+    leads = store.get("888-leads", []);
+    const save = () => { store.set("888-leads", leads); renderLeads(); render(); };
+    backend = {
+      add: async (l) => { leads.push(Object.assign({ id: "l" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) }, l)); save(); },
+      update: async (id, patch) => { leads = leads.map((l) => l.id === id ? Object.assign({}, l, patch) : l); save(); },
+      remove: async (id) => { leads = leads.filter((l) => l.id !== id); save(); }
+    };
+    renderLeads();
+  }
+
+  async function connect() {
+    let db = null;
+    for (let i = 0; i < 30 && !(window.claude && window.claude.use); i++) await new Promise((r) => setTimeout(r, 100));
+    try { db = window.claude && window.claude.use ? await window.claude.use("db") : null; } catch (e) { db = null; }
+    if (!db) { useLocal("Saved on this device only. Open the shared link while signed in to share the list with your team."); return; }
+    const col = db.collection("leads");
+    backend = {
+      add: async (l) => { await col.doc().set(l); },
+      update: async (id, patch) => { await col.doc(id).update(patch); },
+      remove: async (id) => { await col.doc(id).delete(); }
+    };
+    $("storeNote").textContent = "Shared with your team: everyone with access sees the same list.";
+    col.onSnapshot((snap) => {
+      leads = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+      renderLeads(); render();
+    }, () => {
+      useLocal("The shared list stopped responding. Showing this device's list. Reload to reconnect.");
+    });
+  }
+
+  // ---------- start ----------
+  renderPicker(); renderFields(); render(); renderLeads();
+  showView(store.get("888-view", "scripts"));
+  connect();
+})();
+</script>
