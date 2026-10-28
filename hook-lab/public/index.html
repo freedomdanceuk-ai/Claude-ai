@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hook Lab</title>
+<style>
+  :root {
+    --bg: #0f0f12; --panel: #18181d; --panel2: #202027; --line: #2d2d36;
+    --text: #ececf1; --muted: #9a9aa8; --accent: #f5b942; --accent-ink: #1a1405;
+    --good: #5fd38d; --bad: #ff6b6b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+  header { padding: 20px 16px 8px; max-width: 1200px; margin: 0 auto; }
+  header h1 { margin: 0; font-size: 26px; } header h1 span { color: var(--accent); }
+  header p { margin: 4px 0 0; color: var(--muted); }
+  main { max-width: 1200px; margin: 0 auto; padding: 8px 16px 48px;
+    display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 20px; }
+  @media (max-width: 860px) { main { grid-template-columns: minmax(0, 1fr); } }
+  section.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  h2 { font-size: 16px; margin: 0 0 12px; display: flex; gap: 8px; align-items: center; }
+  h2 .step { background: var(--accent); color: var(--accent-ink); border-radius: 50%; width: 22px; height: 22px;
+    display: inline-grid; place-items: center; font-size: 13px; }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  input, textarea, select { width: 100%; background: var(--panel2); color: var(--text); border: 1px solid var(--line);
+    border-radius: 8px; padding: 9px 10px; font: inherit; }
+  textarea { min-height: 70px; resize: vertical; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  button { font: inherit; border-radius: 8px; border: 1px solid var(--line); background: var(--panel2);
+    color: var(--text); padding: 9px 14px; cursor: pointer; }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  button:disabled { opacity: .5; cursor: progress; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .hint { font-size: 12px; color: var(--muted); }
+  .thumbs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .thumbs img { width: 56px; height: 90px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); }
+  .status { margin: 0 0 16px; padding: 10px 12px; border-radius: 8px; display: none; }
+  .status.show { display: block; }
+  .status.err { background: #3a1717; color: #ffc9c9; }
+  .status.busy { background: #2a2414; color: #ffe2a3; }
+  .empty { color: var(--muted); text-align: center; padding: 40px 16px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+  .chip { background: var(--panel2); border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; font-size: 12px; }
+  .template { background: var(--panel2); border-left: 3px solid var(--accent); padding: 10px 12px; border-radius: 6px;
+    font-size: 16px; font-weight: 600; }
+  .kv { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 4px 12px; margin-top: 8px; }
+  .kv dt { color: var(--muted); font-size: 13px; } .kv dd { margin: 0; }
+  .score { font-weight: 700; color: var(--accent); }
+  .hooks { display: grid; gap: 14px; }
+  .hook { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+  .hook .say { font-size: 18px; font-weight: 700; margin: 6px 0; }
+  .hook .ost { display: inline-block; background: #000; color: #fff; padding: 2px 8px; border-radius: 4px; font-weight: 700; }
+  .hook ol { margin: 6px 0 0; padding-left: 20px; }
+  .hook-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+  .muted { color: var(--muted); }
+  details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Hook <span>Lab</span></h1>
+  <p>Break down a viral hook, then rebuild it for your own brand using the same psychology.</p>
+</header>
+
+<main>
+  <div>
+    <section class="panel">
+      <h2><span class="step">1</span> The viral hook</h2>
+      <div class="row">
+        <div>
+          <label for="platform">Platform</label>
+          <select id="platform">
+            <option>TikTok</option><option>Instagram Reels</option><option>YouTube Shorts</option><option>Facebook Reels</option>
+          </select>
+        </div>
+        <div>
+          <label for="performance">Performance (optional)</label>
+          <input id="performance" placeholder="e.g. 4.2M views, 300k likes">
+        </div>
+      </div>
+      <label for="url">Link (optional, for your reference)</label>
+      <input id="url" placeholder="https://www.tiktok.com/@...">
+      <label for="spoken">What is said in the first 3 seconds</label>
+      <textarea id="spoken" placeholder="e.g. &quot;Stop buying couches from the mall. Here's why.&quot;"></textarea>
+      <label for="onScreenText">On-screen text</label>
+      <textarea id="onScreenText" placeholder="e.g. 'The $200 couch vs the $2,000 couch'"></textarea>
+      <label for="visual">What you see / what happens</label>
+      <textarea id="visual" placeholder="e.g. Guy jumps onto a couch, it collapses. Quick zoom on his face."></textarea>
+      <label for="screens">Screenshots of the opening (optional)</label>
+      <input id="screens" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple>
+      <div class="thumbs" id="thumbs"></div>
+      <div class="actions">
+        <button class="primary" id="analyzeBtn">Analyse hook</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2><span class="step">2</span> Your brand</h2>
+      <label for="b-name">Business name</label>
+      <input id="b-name" data-brand="name">
+      <label for="b-niche">Niche / industry</label>
+      <input id="b-niche" data-brand="niche">
+      <label for="b-offer">Product or offer to feature</label>
+      <textarea id="b-offer" data-brand="offer"></textarea>
+      <label for="b-audience">Target audience</label>
+      <input id="b-audience" data-brand="audience">
+      <div class="row">
+        <div><label for="b-location">Location / market</label><input id="b-location" data-brand="location"></div>
+        <div><label for="b-tone">Tone</label><input id="b-tone" data-brand="tone"></div>
+      </div>
+      <label for="b-goal">Goal of the video</label>
+      <input id="b-goal" data-brand="goal">
+      <div class="row">
+        <div>
+          <label for="count">How many hooks</label>
+          <select id="count"><option>3</option><option selected>5</option><option>8</option><option>10</option></select>
+        </div>
+      </div>
+      <label for="feedback">Feedback for the next batch (optional)</label>
+      <textarea id="feedback" placeholder="e.g. more humour, mention free delivery, less salesy"></textarea>
+      <div class="actions">
+        <button class="primary" id="generateBtn" disabled>Generate my hooks</button>
+      </div>
+      <p class="hint">Brand details are remembered in this browser.</p>
+    </section>
+  </div>
+
+  <div>
+    <div class="status" id="status"></div>
+    <section class="panel" id="analysisPanel">
+      <h2>Breakdown</h2>
+      <div id="analysis" class="empty">Paste a viral hook and press <b>Analyse hook</b>.</div>
+    </section>
+    <section class="panel">
+      <h2>Your new hooks</h2>
+      <div id="hooks" class="empty">Your hooks will appear here.</div>
+    </section>
+    <section class="panel">
+      <h2>Swipe file (saved hooks)</h2>
+      <div id="saved" class="empty">Save hooks you like and they'll stay here.</div>
+    </section>
+  </div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } },
+  set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} },
+};
+
+const DEFAULT_BRAND = {
+  name: "Black Gold Furniture",
+  niche: "Furniture (sofas, beds, dining sets, custom pieces)",
+  offer: "Solid wood furniture, made to order, with delivery",
+  audience: "Homeowners and young families furnishing a new home",
+  location: "Zimbabwe (Harare, Bulawayo)",
+  tone: "Confident, warm, a bit cheeky",
+  goal: "Get people to DM or WhatsApp for a quote",
+};
+
+let analysis = null;
+let images = [];
+
+// ---------- brand form ----------
+const brandInputs = [...document.querySelectorAll("[data-brand]")];
+const savedBrand = store.get("hooklab.brand", DEFAULT_BRAND);
+brandInputs.forEach((el) => {
+  el.value = savedBrand[el.dataset.brand] ?? "";
+  el.addEventListener("input", () => store.set("hooklab.brand", readBrand()));
+});
+function readBrand() {
+  const b = {};
+  brandInputs.forEach((el) => (b[el.dataset.brand] = el.value));
+  b.platform = $("platform").value;
+  return b;
+}
+
+// ---------- screenshots ----------
+$("screens").addEventListener("change", async (e) => {
+  const files = [...e.target.files].slice(0, 6);
+  images = await Promise.all(files.map(fileToDataUrl));
+  $("thumbs").replaceChildren(...images.map((src) => Object.assign(document.createElement("img"), { src })));
+});
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+// ---------- helpers ----------
+function el(tag, props = {}, ...children) {
+  const node = document.createElement(tag);
+  Object.assign(node, props);
+  for (const c of children.flat(Infinity)) if (c != null) node.append(c);
+  return node;
+}
+function status(msg, kind) {
+  const s = $("status");
+  s.textContent = msg || "";
+  s.className = "status" + (msg ? " show " + kind : "");
+}
+async function post(url, body) {
+  const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const data = await res.json().catch(() => ({ error: "Bad response from server" }));
+  if (!res.ok) throw new Error(data.error || "Request failed");
+  return data;
+}
+function busy(btn, on) { btn.disabled = on; }
+
+// ---------- analyse ----------
+$("analyzeBtn").addEventListener("click", async () => {
+  const original = {
+    platform: $("platform").value,
+    performance: $("performance").value,
+    url: $("url").value,
+    spoken: $("spoken").value,
+    onScreenText: $("onScreenText").value,
+    visual: $("visual").value,
+    images,
+  };
+  busy($("analyzeBtn"), true);
+  status("Breaking down the hook… (this can take up to a minute)", "busy");
+  try {
+    analysis = await post("/api/analyze", { original });
+    renderAnalysis(analysis);
+    $("generateBtn").disabled = false;
+    status("");
+  } catch (err) {
+    status(err.message, "err");
+  } finally {
+    busy($("analyzeBtn"), false);
+  }
+});
+
+function renderAnalysis(a) {
+  const box = $("analysis");
+  box.className = "";
+  box.replaceChildren(
+    el("p", {}, el("b", { textContent: a.hook_summary })),
+    el("div", { className: "chips" },
+      el("span", { className: "chip", textContent: a.video_format }),
+      a.hook_types.map((t) => el("span", { className: "chip", textContent: t })),
+      el("span", { className: "chip score", textContent: `Strength ${a.strength_score}/10` })),
+    el("p", { className: "muted", textContent: "Reusable template" }),
+    el("div", { className: "template", textContent: a.structure_template }),
+    el("dl", { className: "kv" },
+      a.slots.map((s) => [el("dt", { textContent: s.slot }), el("dd", { textContent: `${s.role} — original: “${s.original_value}”` })])),
+    el("p", { className: "muted", textContent: "Psychological triggers" }),
+    el("dl", { className: "kv" },
+      a.psychological_triggers.map((t) => [el("dt", { textContent: t.trigger }), el("dd", { textContent: t.how_it_is_used })])),
+    el("details", {},
+      el("summary", { textContent: "Elements, open loop & why it works" }),
+      el("dl", { className: "kv" },
+        Object.entries(a.elements).map(([k, v]) => [el("dt", { textContent: k.replaceAll("_", " ") }), el("dd", { textContent: v })]),
+        el("dt", { textContent: "open loop" }), el("dd", { textContent: a.open_loop }),
+        el("dt", { textContent: "why it works" }), el("dd", { textContent: a.why_it_works }),
+        el("dt", { textContent: "don't copy" }), el("dd", { textContent: a.do_not_copy }))),
+  );
+}
+
+// ---------- generate ----------
+$("generateBtn").addEventListener("click", async () => {
+  busy($("generateBtn"), true);
+  status("Writing your hooks…", "busy");
+  try {
+    const result = await post("/api/generate", {
+      analysis, brand: readBrand(), count: $("count").value, feedback: $("feedback").value,
+    });
+    renderHooks(result);
+    status("");
+  } catch (err) {
+    status(err.message, "err");
+  } finally {
+    busy($("generateBtn"), false);
+  }
+});
+
+function hookAsText(h) {
+  return [
+    `HOOK: ${h.title}`,
+    `Say: ${h.spoken_line}`,
+    `On-screen text: ${h.on_screen_text}`,
+    `Opening visual: ${h.opening_visual}`,
+    `Shots:\n${h.shot_list.map((s, i) => `  ${i + 1}. ${s}`).join("\n")}`,
+    `Payoff: ${h.payoff}`,
+  ].join("\n");
+}
+
+function hookCard(h, { saved = false } = {}) {
+  const copyBtn = el("button", { textContent: "Copy" });
+  copyBtn.onclick = async () => {
+    try { await navigator.clipboard.writeText(hookAsText(h)); copyBtn.textContent = "Copied"; }
+    catch { copyBtn.textContent = "Copy failed"; }
+    setTimeout(() => (copyBtn.textContent = "Copy"), 1500);
+  };
+  const saveBtn = el("button", { textContent: saved ? "Remove" : "Save" });
+  saveBtn.onclick = () => {
+    const list = store.get("hooklab.saved", []);
+    if (saved) store.set("hooklab.saved", list.filter((x) => x.spoken_line !== h.spoken_line));
+    else if (!list.some((x) => x.spoken_line === h.spoken_line)) store.set("hooklab.saved", [h, ...list]);
+    if (!saved) saveBtn.textContent = "Saved";
+    renderSaved();
+  };
+  return el("div", { className: "hook" },
+    el("div", { className: "hook-head" },
+      el("b", { textContent: h.title }),
+      el("span", { className: "score", textContent: `${h.strength_score}/10` })),
+    el("div", { className: "say", textContent: `“${h.spoken_line}”` }),
+    el("div", {}, el("span", { className: "ost", textContent: h.on_screen_text })),
+    el("p", {}, el("span", { className: "muted", textContent: "Opening shot: " }), h.opening_visual),
+    el("ol", {}, h.shot_list.map((s) => el("li", { textContent: s }))),
+    el("div", { className: "chips" }, (h.principles_borrowed || []).map((p) => el("span", { className: "chip", textContent: p }))),
+    el("details", {},
+      el("summary", { textContent: "Template fill, payoff & reasoning" }),
+      el("dl", { className: "kv" },
+        (h.template_fill || []).map((f) => [el("dt", { textContent: f.slot }), el("dd", { textContent: f.value })]),
+        el("dt", { textContent: "payoff" }), el("dd", { textContent: h.payoff }),
+        el("dt", { textContent: "why" }), el("dd", { textContent: h.why_it_should_work }))),
+    el("div", { className: "actions" }, copyBtn, saveBtn),
+  );
+}
+
+function renderHooks(result) {
+  const box = $("hooks");
+  box.className = "hooks";
+  const children = result.hooks.map((h) => hookCard(h));
+  if (result.filming_tips?.length) {
+    children.push(el("div", {},
+      el("p", { className: "muted", textContent: "Filming tips" }),
+      el("ul", {}, result.filming_tips.map((t) => el("li", { textContent: t })))));
+  }
+  box.replaceChildren(...children);
+}
+
+function renderSaved() {
+  const list = store.get("hooklab.saved", []);
+  const box = $("saved");
+  if (!list.length) {
+    box.className = "empty";
+    box.textContent = "Save hooks you like and they'll stay here.";
+    return;
+  }
+  box.className = "hooks";
+  box.replaceChildren(...list.map((h) => hookCard(h, { saved: true })));
+}
+renderSaved();
+</script>
+</body>
+</html>
