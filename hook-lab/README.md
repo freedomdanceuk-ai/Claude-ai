@@ -63,3 +63,8 @@ The tests run the server against a mocked Claude API, so they need no API key an
 <https://claude.ai/artifact/7P7Gq9dhFVAmZ8VtgQBdsC>
 
 It runs inside Claude, on the viewer's own Claude account, so it needs no server and no API key. On first use Claude asks you to allow the page to use Claude. Saved hooks are kept with your Claude account. Your brand details are remembered on each device.
+
+Getting a video in:
+
+- **YouTube / Shorts link:** tap **Pull**. The page sends the link to your Higgsfield connector's video analysis. That takes 3–5 minutes and may use Higgsfield credits. Then Claude fills in what's said, the on-screen text and the visuals for the first 3 seconds.
+- **TikTok / Instagram / Facebook:** these platforms don't let other apps read videos from a link. Save the video to your phone (Share → Save video), then pick the file. The page takes 6 frames from the first ~4 seconds on your phone and sends them to Claude. Burned-in captions in the frames usually show what's said. The audio itself isn't transcribed.

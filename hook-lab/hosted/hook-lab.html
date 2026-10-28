@@ -117,7 +117,12 @@
   .shots li { display: grid; grid-template-columns: 4.6em minmax(0, 1fr); gap: 10px; align-items: baseline; }
   .shots .t { font: 500 12px var(--font-mono); color: var(--accent); font-variant-numeric: tabular-nums; }
   .empty { color: var(--muted); font-size: 15px; margin: 0; }
-  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .source { display: grid; gap: 10px; padding: 12px; border-radius: 10px; background: var(--sunk); }
+  .source input { background: var(--surface); }
+  .linkrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .linkrow input { flex: 1 1 200px; }
+  .or { font: 500 11px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); text-align: center; margin: 0; }
+  .filepick input[type=file] { font-size: 14px; }
 </style>
 
 <div class="wrap">
@@ -130,6 +135,19 @@
 
   <section class="card" aria-labelledby="h-hook">
     <h2 id="h-hook">The viral hook <span class="tc">0:00–0:03</span></h2>
+    <div class="source">
+      <label for="link">Pull from a link <small>YouTube and Shorts links are read automatically</small></label>
+      <div class="linkrow">
+        <input id="link" type="url" inputmode="url" placeholder="https://youtube.com/shorts/…">
+        <button type="button" id="linkBtn">Pull</button>
+      </div>
+      <p class="status" id="linkStatus" hidden></p>
+      <p class="or">or</p>
+      <label class="filepick" for="video">Pick the video file <small>TikTok or Instagram: tap Share → Save video first</small>
+        <input id="video" type="file" accept="video/*">
+      </label>
+      <p class="status" id="videoStatus" hidden></p>
+    </div>
     <div class="pair">
       <label for="platform">Platform
         <select id="platform">
@@ -149,7 +167,7 @@
     <label for="visual">What you see
       <textarea id="visual" placeholder="Guy jumps onto a couch, it collapses. Quick zoom on his face."></textarea>
     </label>
-    <label for="screens">Screenshots of the opening <small>optional, up to 4</small>
+    <label for="screens">Extra screenshots <small>optional, up to 4</small>
       <input id="screens" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple>
     </label>
     <div class="thumbs" id="thumbs"></div>
@@ -272,8 +290,12 @@
   };
 
   let analysis = null;   // null until the viewer analyses a real hook
-  let images = [];
-  let sample = null, db = null, savedCol = null;
+  let images = [];       // screenshots the viewer picked
+  let frames = [];       // frames grabbed from a picked video
+  let videoNote = "";    // e.g. "Frames at 0.0s, 0.6s… of a 14s video"
+  let linkAnalysis = ""; // raw scene analysis pulled from a link
+  let sample = null, db = null, savedCol = null, mcp = null;
+  let maxImages = 6;
   let savedLocal = ls.get("hooklab.saved", []);
 
   // ---------- DOM helper ----------
@@ -309,11 +331,161 @@
   }
   syncBrandSummary();
 
-  // ---------- screenshots ----------
+  // ---------- screenshots and video frames ----------
+  function renderThumbs() {
+    $("thumbs").replaceChildren(...[...frames, ...images].map((f, i) =>
+      el("img", { src: URL.createObjectURL(f), alt: i < frames.length ? "Video frame " + (i + 1) : "Screenshot" })));
+  }
+  const allImages = () => [...frames, ...images].slice(0, maxImages);
+
   $("screens").addEventListener("change", (e) => {
     images = [...e.target.files].slice(0, 4);
-    $("thumbs").replaceChildren(...images.map((f) => el("img", { src: URL.createObjectURL(f), alt: "Screenshot " + f.name })));
+    renderThumbs();
   });
+
+  // Grab stills from the opening seconds of a local video, entirely on the device.
+  function grabFrames(file, times) {
+    return new Promise((resolve, reject) => {
+      const v = document.createElement("video");
+      v.muted = true; v.playsInline = true; v.preload = "auto";
+      v.src = URL.createObjectURL(file);
+      const out = [];
+      const canvas = document.createElement("canvas");
+      let i = 0;
+      const fail = () => reject(new Error("unreadable"));
+      v.onerror = fail;
+      v.onloadeddata = () => {
+        const dur = isFinite(v.duration) ? v.duration : 0;
+        const ts = times.filter((t) => !dur || t < dur);
+        const scale = Math.min(1, 1080 / Math.max(v.videoWidth, v.videoHeight));
+        canvas.width = Math.round(v.videoWidth * scale);
+        canvas.height = Math.round(v.videoHeight * scale);
+        const next = () => {
+          if (i >= ts.length) { URL.revokeObjectURL(v.src); resolve({ blobs: out, times: ts.slice(0, out.length), duration: dur }); return; }
+          v.currentTime = ts[i];
+        };
+        v.onseeked = () => {
+          canvas.getContext("2d").drawImage(v, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob((b) => { if (b) out.push(b); i++; next(); }, "image/jpeg", 0.85);
+        };
+        next();
+      };
+    });
+  }
+
+  $("video").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    const status = $("videoStatus");
+    frames = []; videoNote = ""; renderThumbs();
+    if (!file) { setStatus(status, ""); return; }
+    setStatus(status, "Taking frames from the opening…", "busy");
+    try {
+      const { blobs, times, duration } = await grabFrames(file, [0, 0.6, 1.2, 1.8, 2.6, 3.6]);
+      if (!blobs.length) throw new Error("no frames");
+      frames = blobs;
+      videoNote = `The first ${blobs.length} images are frames from the video at ${times.map((t) => t.toFixed(1) + "s").join(", ")}` +
+        (duration ? ` (the whole video is ${Math.round(duration)}s long)` : "") +
+        ". Read any captions or on-screen text in them; burned-in captions usually show what is said.";
+      renderThumbs();
+      setStatus(status, `Got ${blobs.length} frames from the first ${times[times.length - 1].toFixed(1)} seconds. If the speech isn't captioned on screen, type it under “What is said”.`, "busy");
+    } catch {
+      setStatus(status, "This phone couldn't read that video. Take 2–4 screenshots of the opening instead and add them below.", "err");
+    }
+  });
+
+  // ---------- pull from a link (YouTube via the viewer's Higgsfield connector) ----------
+  const HF = "Higgsfield";
+  const isYouTube = (u) => /^https:\/\/((www|m)\.)?youtube\.com\/|^https:\/\/youtu\.be\//i.test(u);
+  const isLockedPlatform = (u) => /tiktok\.com|instagram\.com|facebook\.com|fb\.watch/i.test(u);
+  const findUuid = (v) => (JSON.stringify(v ?? "").match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i) || [])[0];
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const mcpCopy = {
+    server_not_connected: "Connect Higgsfield in claude.ai Settings → Connectors to pull YouTube links. Or pick the video file instead.",
+    needs_reauth: "Reconnect Higgsfield in claude.ai Settings → Connectors, then tap Pull again.",
+    selection_required: "Choose which Higgsfield connection to use in the prompt claude.ai showed, then tap Pull again.",
+    not_in_manifest: "Higgsfield isn't allowed for this page. Allow it from the page's Permissions menu, then tap Pull again.",
+    approval_required: "Pulling needs your approval. Tap Pull again and choose Allow.",
+    blocked_by_policy: "Your organisation blocks this Higgsfield tool. Pick the video file instead.",
+  };
+  const mcpError = (e) => mcpCopy[e?.code] ||
+    (e?.code === "tool_error" ? "Higgsfield couldn't read that video: " + str(e.message).slice(0, 160) : "Couldn't reach Higgsfield. Tap Pull to try again.");
+
+  let linkRun = 0;
+  $("linkBtn").addEventListener("click", async () => {
+    const status = $("linkStatus");
+    const url = $("link").value.trim();
+    if (!url) { setStatus(status, "Paste a video link first.", "err"); return; }
+    if (isLockedPlatform(url)) {
+      setStatus(status, "TikTok, Instagram and Facebook don't let other apps read videos from a link. In the app tap Share → Save video, then pick the file below.", "err");
+      return;
+    }
+    if (!isYouTube(url)) { setStatus(status, "Only YouTube and Shorts links can be pulled. For other videos, pick the file below.", "err"); return; }
+    if (!mcp) { setStatus(status, "Pulling links needs the Higgsfield connector, which isn't available here. Pick the video file instead.", "err"); return; }
+
+    const run = ++linkRun;
+    const btn = $("linkBtn");
+    btn.disabled = true;
+    linkAnalysis = "";
+    setStatus(status, "Sending the video to Higgsfield…", "busy");
+    try {
+      const started = await mcp.callTool(HF, "video_analysis_create", { youtube_url: url }, { cache: false });
+      const jobId = findUuid(started.payload);
+      if (!jobId) throw { code: "tool_error", message: "No analysis id came back." };
+      const t0 = Date.now();
+      // Higgsfield takes 3–5 minutes; check every 30 s for up to 10 minutes.
+      for (let n = 0; n < 20 && run === linkRun; n++) {
+        await wait(n === 0 ? 45000 : 30000);
+        if (run !== linkRun) return;
+        const mins = Math.round((Date.now() - t0) / 60000);
+        setStatus(status, `Higgsfield is watching the video (${mins} min so far, usually 3–5). You can fill in your brand while you wait.`, "busy");
+        let res;
+        try {
+          res = await mcp.callTool(HF, "video_analysis_status", { video_analyze_id: jobId }, { cache: false });
+        } catch (e) {
+          if (e?.retryable) continue;
+          throw e;
+        }
+        const p = res.payload || {};
+        const state = str(p.status).toLowerCase();
+        if (state === "failed") throw { code: "tool_error", message: str(p.fail_reason) || "the analysis failed" };
+        if (state === "completed") {
+          linkAnalysis = JSON.stringify(p).slice(0, 60000);
+          await fillFromLink(status);
+          return;
+        }
+      }
+      if (run === linkRun) setStatus(status, "Higgsfield is taking longer than usual. Tap Pull to check again later, or pick the video file instead.", "err");
+    } catch (e) {
+      if (run === linkRun) setStatus(status, mcpError(e), "err");
+    } finally {
+      if (run === linkRun) btn.disabled = false;
+    }
+  });
+
+  // Turn the raw scene analysis into the three fields, so the viewer can check and edit them.
+  async function fillFromLink(status) {
+    if (!sample) {
+      setStatus(status, "Pulled the video. It will be used when you tap Analyse hook.", "busy");
+      return;
+    }
+    setStatus(status, "Pulled the video. Reading out the first 3 seconds…", "busy");
+    try {
+      const r = await sample.json(
+        "Below is a machine-generated scene-by-scene analysis of a short video. From it, extract ONLY the opening hook (roughly the first 3 seconds). " +
+        'Reply with only a JSON object: {"spoken": "words said, verbatim if available", "on_screen_text": "text overlays", "visual": "what is seen and what happens"}. ' +
+        "Use an empty string for anything the analysis doesn't contain.\n\nANALYSIS:\n" + linkAnalysis,
+        { modelTier: "quick" },
+      );
+      if (r && typeof r === "object") {
+        if (r.spoken) $("spoken").value = str(r.spoken);
+        if (r.on_screen_text) $("onscreen").value = str(r.on_screen_text);
+        if (r.visual) $("visual").value = str(r.visual);
+      }
+      setStatus(status, "Filled in from the video. Check the fields, then tap Analyse hook.", "busy");
+    } catch (e) {
+      setStatus(status, "Pulled the video. It will be used when you tap Analyse hook.", "busy");
+    }
+  }
 
   // ---------- rendering ----------
   function templateNode(t) {
@@ -494,8 +666,9 @@
   $("analyzeBtn").addEventListener("click", async () => {
     const status = $("analyzeStatus");
     const text = originalText();
-    if (!$("spoken").value.trim() && !$("onscreen").value.trim() && !$("visual").value.trim() && !images.length) {
-      setStatus(status, "Describe the hook (what's said, the on-screen text or what you see), or add a screenshot.", "err");
+    const pics = allImages();
+    if (!$("spoken").value.trim() && !$("onscreen").value.trim() && !$("visual").value.trim() && !pics.length && !linkAnalysis) {
+      setStatus(status, "Pull a link, pick the video, or describe the hook (what's said, the on-screen text or what you see).", "err");
       return;
     }
     if (!sample) { setStatus(status, "Open this page in Claude to analyse hooks.", "err"); return; }
@@ -508,10 +681,12 @@
         "Break this hook into transferable principles: archetype, psychological triggers, spoken / on-screen / visual / audio elements, pacing, " +
         "and a reusable fill-in-the-blank template. Be concrete and specific to the material; no generic padding. " +
         "If information is thin, analyse what is there.\n\n" +
-        (images.length ? "The attached images are screenshots from the opening seconds of the video.\n\n" : "") +
-        "THE HOOK:\n" + (text || "(see screenshots)") +
+        (frames.length && pics.length ? videoNote + (images.length ? " Any images after those are screenshots of the opening." : "") + "\n\n"
+          : pics.length ? "The attached images are screenshots from the opening seconds of the video.\n\n" : "") +
+        "THE HOOK:\n" + (text || "(see the images and analysis)") +
+        (linkAnalysis ? "\n\nAUTOMATED SCENE ANALYSIS OF THE VIDEO (focus on the opening seconds):\n" + linkAnalysis.slice(0, 30000) : "") +
         "\n\nReply with only one JSON object in exactly this shape:\n" + ANALYSIS_SHAPE;
-      const result = await sample.json(prompt, images.length ? { images } : {});
+      const result = await sample.json(prompt, pics.length ? { images: pics } : {});
       if (!result || typeof result !== "object" || !result.structure_template) throw { code: "invalid_json" };
       analysis = result;
       renderAnalysis(analysis, false);
@@ -581,8 +756,15 @@
     sample = s;
     if (!s) { $("unavailable").hidden = false; return; }
     const caps = await s.limits().catch(() => null);
-    if (!caps?.images) $("screens").closest("label").hidden = true;
+    if (caps?.images?.maxCount) maxImages = Math.min(caps.images.maxCount, 8);
+    if (!caps?.images) {
+      $("screens").closest("label").hidden = true;
+      $("video").closest("label").hidden = true;
+      $("thumbs").hidden = true;
+    }
   });
+
+  claudeApi.use("mcp").then((m) => { mcp = m; });
 
   Promise.all([claudeApi.use("db"), claudeApi.use("user")]).then(async ([d, u]) => {
     const id = u ? await u.id().catch(() => null) : null;
