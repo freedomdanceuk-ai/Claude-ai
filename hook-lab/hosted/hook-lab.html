@@ -1,0 +1,601 @@
+<title>Hook Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+  /* Layout: one phone-width column that reads like an editing timeline; the 0:00-0:03 strip is the recurring motif. */
+  :root {
+    --bg: #f3f2f7;
+    --surface: #ffffff;
+    --sunk: #e9e7f0;
+    --line: #d9d6e3;
+    --fg: #17151f;
+    --muted: #625e72;
+    --accent: #3530d9;
+    --accent-ink: #ffffff;
+    --rec: #e0313b;
+    --score: #a35c00;
+    --ok: #1d7a46;
+    --err-bg: #fde8e8;
+    --err-fg: #8c1d22;
+    --font-display: "Bricolage Grotesque", "Arial Narrow", system-ui, sans-serif;
+    --font-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121118; --surface: #1b1a23; --sunk: #25232f; --line: #34313f;
+      --fg: #ecebf2; --muted: #a29fb3; --accent: #9894ff; --accent-ink: #12101f;
+      --rec: #ff5d63; --score: #f2b14b; --ok: #6fd69a; --err-bg: #3a1a1d; --err-fg: #ffc4c6;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121118; --surface: #1b1a23; --sunk: #25232f; --line: #34313f;
+    --fg: #ecebf2; --muted: #a29fb3; --accent: #9894ff; --accent-ink: #12101f;
+    --rec: #ff5d63; --score: #f2b14b; --ok: #6fd69a; --err-bg: #3a1a1d; --err-fg: #ffc4c6;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--fg);
+    font: 16px/1.5 var(--font-body);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 20px 56px;
+  }
+  .wrap { max-width: 680px; margin: 0 auto; display: grid; gap: 18px; }
+
+  header { display: grid; gap: 6px; }
+  .brandmark { display: flex; align-items: center; gap: 10px; }
+  .rec { width: 12px; height: 12px; border-radius: 50%; background: var(--rec); flex: none; }
+  @media (prefers-reduced-motion: no-preference) { .rec { animation: blink 1.6s ease-in-out infinite; } }
+  @keyframes blink { 50% { opacity: .35; } }
+  h1 { font: 800 clamp(30px, 8vw, 40px)/1 var(--font-display); letter-spacing: -0.02em; margin: 0; }
+  .lede { margin: 0; color: var(--muted); max-width: 52ch; }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+  .card > h2 { margin: 0; font: 700 20px/1.2 var(--font-display); text-wrap: balance; display: flex; align-items: baseline; gap: 10px; }
+  .card > h2 .tc { font: 500 12px var(--font-mono); color: var(--muted); letter-spacing: .04em; }
+
+  label { display: grid; gap: 4px; font-size: 14px; font-weight: 600; }
+  label small { font-weight: 400; color: var(--muted); }
+  input, textarea, select {
+    width: 100%; font: inherit; font-size: 16px; color: var(--fg); background: var(--sunk);
+    border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-width: 0;
+  }
+  textarea { min-height: 72px; resize: vertical; }
+  input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+  .pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+
+  button {
+    font: 600 15px var(--font-body); border-radius: 10px; padding: 11px 16px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--sunk); color: var(--fg);
+  }
+  button.go { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); width: 100%; padding: 14px; font-size: 16px; }
+  button:disabled { opacity: .55; cursor: progress; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .note { margin: 0; font-size: 14px; color: var(--muted); }
+  .status { margin: 0; padding: 10px 12px; border-radius: 10px; font-size: 14px; }
+  .status.err { background: var(--err-bg); color: var(--err-fg); }
+  .status.busy { background: var(--sunk); color: var(--fg); }
+  .example-tag {
+    font: 500 11px var(--font-mono); text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted); border: 1px dashed var(--line); border-radius: 6px; padding: 2px 6px; align-self: start; justify-self: start;
+  }
+
+  .thumbs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .thumbs img { width: 54px; height: 96px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-size: 13px; padding: 3px 10px; border-radius: 999px; background: var(--sunk); border: 1px solid var(--line); }
+  .chip.score { color: var(--score); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .template {
+    font: 700 19px/1.35 var(--font-display); padding: 12px 14px; border-radius: 10px;
+    background: var(--sunk); overflow-wrap: anywhere;
+  }
+  .template .slot { color: var(--accent); }
+  .kv { display: grid; grid-template-columns: minmax(0, 9em) minmax(0, 1fr); gap: 6px 12px; margin: 0; }
+  .kv dt { font-size: 13px; color: var(--muted); font-weight: 600; overflow-wrap: anywhere; }
+  .kv dd { margin: 0; overflow-wrap: anywhere; }
+  @media (max-width: 420px) { .kv { grid-template-columns: minmax(0, 1fr); gap: 2px; } .kv dd { margin-bottom: 8px; } }
+  .label { font: 500 11px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0; }
+  details > summary { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--muted); }
+  details[open] > summary { margin-bottom: 10px; }
+
+  .hooks { display: grid; gap: 14px; }
+  .hook { border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 10px; background: var(--surface); min-width: 0; }
+  .hook-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+  .hook-head b { font-size: 14px; color: var(--muted); }
+  .hook .say { font: 700 21px/1.25 var(--font-display); margin: 0; text-wrap: balance; overflow-wrap: anywhere; }
+  .ost { justify-self: start; background: #000; color: #fff; font-weight: 700; padding: 3px 9px; border-radius: 4px; max-width: 100%; overflow-wrap: anywhere; }
+  .shots { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .shots li { display: grid; grid-template-columns: 4.6em minmax(0, 1fr); gap: 10px; align-items: baseline; }
+  .shots .t { font: 500 12px var(--font-mono); color: var(--accent); font-variant-numeric: tabular-nums; }
+  .empty { color: var(--muted); font-size: 15px; margin: 0; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brandmark"><span class="rec" aria-hidden="true"></span><h1>Hook Lab</h1></div>
+    <p class="lede">Break down a viral hook, then rebuild it for your brand using the same psychology.</p>
+  </header>
+
+  <p class="status err" id="unavailable" hidden>This page needs to be opened inside Claude (claude.ai or the Claude app) to analyse hooks. The examples below still show how it works.</p>
+
+  <section class="card" aria-labelledby="h-hook">
+    <h2 id="h-hook">The viral hook <span class="tc">0:00–0:03</span></h2>
+    <div class="pair">
+      <label for="platform">Platform
+        <select id="platform">
+          <option>TikTok</option><option>Instagram Reels</option><option>YouTube Shorts</option><option>Facebook Reels</option>
+        </select>
+      </label>
+      <label for="performance">Performance <small>optional</small>
+        <input id="performance" placeholder="4.2M views, 300k likes">
+      </label>
+    </div>
+    <label for="spoken">What is said
+      <textarea id="spoken" placeholder="“Stop buying couches from the mall. Here’s why.”"></textarea>
+    </label>
+    <label for="onscreen">On-screen text
+      <textarea id="onscreen" placeholder="THE $200 COUCH vs THE $2,000 COUCH"></textarea>
+    </label>
+    <label for="visual">What you see
+      <textarea id="visual" placeholder="Guy jumps onto a couch, it collapses. Quick zoom on his face."></textarea>
+    </label>
+    <label for="screens">Screenshots of the opening <small>optional, up to 4</small>
+      <input id="screens" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple>
+    </label>
+    <div class="thumbs" id="thumbs"></div>
+    <button class="go" id="analyzeBtn">Analyse hook</button>
+    <p class="status" id="analyzeStatus" hidden></p>
+  </section>
+
+  <section class="card" aria-labelledby="h-breakdown">
+    <h2 id="h-breakdown">Breakdown</h2>
+    <div id="analysis"></div>
+  </section>
+
+  <section class="card" aria-labelledby="h-brand">
+    <h2 id="h-brand">Your brand</h2>
+    <details id="brandDetails">
+      <summary id="brandSummary">Black Gold Furniture</summary>
+      <div style="display:grid;gap:12px">
+        <label for="b-name">Business name<input id="b-name" data-brand="name"></label>
+        <label for="b-niche">Niche<input id="b-niche" data-brand="niche"></label>
+        <label for="b-offer">Product or offer to feature<textarea id="b-offer" data-brand="offer"></textarea></label>
+        <label for="b-audience">Audience<input id="b-audience" data-brand="audience"></label>
+        <div class="pair">
+          <label for="b-location">Location<input id="b-location" data-brand="location"></label>
+          <label for="b-tone">Tone<input id="b-tone" data-brand="tone"></label>
+        </div>
+        <label for="b-goal">Goal of the video<input id="b-goal" data-brand="goal"></label>
+      </div>
+    </details>
+    <div class="pair">
+      <label for="count">How many hooks
+        <select id="count"><option>3</option><option selected>5</option><option>8</option></select>
+      </label>
+    </div>
+    <label for="feedback">Feedback for this batch <small>optional</small>
+      <textarea id="feedback" placeholder="More humour, mention free delivery in Harare"></textarea>
+    </label>
+    <button class="go" id="generateBtn">Write my hooks</button>
+    <p class="status" id="generateStatus" hidden></p>
+  </section>
+
+  <section class="card" aria-labelledby="h-hooks">
+    <h2 id="h-hooks">Your hooks</h2>
+    <div id="hooks" class="hooks"></div>
+  </section>
+
+  <section class="card" aria-labelledby="h-saved">
+    <h2 id="h-saved">Swipe file</h2>
+    <p class="note" id="savedNote">Hooks you save are kept with your Claude account.</p>
+    <div id="saved" class="hooks"></div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const ls = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  };
+
+  // ---------- example state (shown until the first real run) ----------
+  const EXAMPLE_ANALYSIS = {
+    hook_summary: "A creator jumps onto a cheap mall couch and it collapses under him.",
+    video_format: "Stunt / product test",
+    hook_types: ["Negative Hook", "Pattern Interrupt", "Price Contrast"],
+    psychological_triggers: [
+      { trigger: "Loss aversion", how_it_is_used: "Nobody wants to be the person who wasted money on a couch that breaks." },
+      { trigger: "Pattern interrupt", how_it_is_used: "Furniture collapsing is unexpected motion in the very first frame." },
+    ],
+    elements: {
+      spoken: "Commanding opener that tells the viewer to stop doing something they probably do.",
+      on_screen_text: "Two prices side by side set up a comparison the viewer wants resolved.",
+      visual: "Collapse happens in the first second, no intro.",
+      audio: "Crunch sound effect, then silence before he talks.",
+      pacing: "The point lands in under two seconds.",
+    },
+    structure_template: "Stop [COMMON_HABIT]. Here's what [CHEAP_VERSION] does after [TIME].",
+    slots: [
+      { slot: "COMMON_HABIT", role: "Something the viewer already does", original_value: "buying couches from the mall" },
+      { slot: "CHEAP_VERSION", role: "The inferior alternative", original_value: "a $200 couch" },
+      { slot: "TIME", role: "Makes the damage feel inevitable", original_value: "six months" },
+    ],
+    open_loop: "Why does it break, and what should I buy instead? Paid off with the solid-wood comparison.",
+    why_it_works: "It challenges a habit, shows proof instantly, and promises a better choice.",
+    strength_score: 8,
+    do_not_copy: "His catchphrase and his face-zoom bit.",
+  };
+  const EXAMPLE_HOOKS = {
+    hooks: [{
+      title: "The creak test",
+      spoken_line: "Stop buying beds that creak after one rainy season.",
+      on_screen_text: "CHEAP BED vs MUKWA BED",
+      opening_visual: "Two people jump onto a cheap bed at the same moment; it groans and the slats crack.",
+      shots: [
+        { t: "0:00", shot: "Jump onto cheap bed, slat cracks" },
+        { t: "0:01", shot: "Close-up of the broken joint" },
+        { t: "0:02", shot: "Same jump on a mukwa bed, silence" },
+      ],
+      template_fill: [
+        { slot: "COMMON_HABIT", value: "buying beds that creak" },
+        { slot: "CHEAP_VERSION", value: "a chipboard bed" },
+        { slot: "TIME", value: "one rainy season" },
+      ],
+      principles_borrowed: ["Negative Hook", "Price Contrast"],
+      payoff: "Show the joinery and quote the price on WhatsApp.",
+      why_it_should_work: "Everyone in Harare has slept on a creaky bed. The test is instant proof.",
+      strength_score: 8,
+    }],
+    filming_tips: ["Film vertically in daylight", "Get the collapse in the first frame, no intro"],
+  };
+
+  const DEFAULT_BRAND = {
+    name: "Black Gold Furniture",
+    niche: "Furniture: sofas, beds, dining sets, custom pieces",
+    offer: "Solid wood furniture, made to order, with delivery",
+    audience: "Homeowners and young families furnishing a new home",
+    location: "Zimbabwe (Harare, Bulawayo)",
+    tone: "Confident, warm, a bit cheeky",
+    goal: "Get people to WhatsApp for a quote",
+  };
+
+  let analysis = null;   // null until the viewer analyses a real hook
+  let images = [];
+  let sample = null, db = null, savedCol = null;
+  let savedLocal = ls.get("hooklab.saved", []);
+
+  // ---------- DOM helper ----------
+  function el(tag, props, ...kids) {
+    const n = document.createElement(tag);
+    if (props) Object.assign(n, props);
+    for (const k of kids.flat(Infinity)) if (k != null && k !== false) n.append(k);
+    return n;
+  }
+  const str = (v) => (v == null ? "" : String(v));
+  const arr = (v) => (Array.isArray(v) ? v : []);
+  function setStatus(node, msg, kind) {
+    node.hidden = !msg;
+    node.textContent = msg || "";
+    node.className = "status " + (kind || "");
+  }
+
+  // ---------- brand ----------
+  const brandInputs = [...document.querySelectorAll("[data-brand]")];
+  const brand0 = ls.get("hooklab.brand", DEFAULT_BRAND);
+  for (const i of brandInputs) {
+    i.value = brand0[i.dataset.brand] ?? "";
+    i.addEventListener("input", () => { ls.set("hooklab.brand", readBrand()); syncBrandSummary(); });
+  }
+  function readBrand() {
+    const b = {};
+    for (const i of brandInputs) b[i.dataset.brand] = i.value.trim();
+    return b;
+  }
+  function syncBrandSummary() {
+    const b = readBrand();
+    $("brandSummary").textContent = (b.name || "Your business") + (b.location ? " · " + b.location : "") + " (tap to edit)";
+  }
+  syncBrandSummary();
+
+  // ---------- screenshots ----------
+  $("screens").addEventListener("change", (e) => {
+    images = [...e.target.files].slice(0, 4);
+    $("thumbs").replaceChildren(...images.map((f) => el("img", { src: URL.createObjectURL(f), alt: "Screenshot " + f.name })));
+  });
+
+  // ---------- rendering ----------
+  function templateNode(t) {
+    const node = el("div", { className: "template" });
+    for (const part of str(t).split(/(\[[^\]]+\])/)) {
+      node.append(/^\[.+\]$/.test(part) ? el("span", { className: "slot", textContent: part }) : part);
+    }
+    return node;
+  }
+
+  function renderAnalysis(a, isExample) {
+    $("analysis").replaceChildren(
+      el("div", { style: "display:grid;gap:12px" },
+        isExample ? el("span", { className: "example-tag", textContent: "Example" }) : null,
+        el("p", { style: "margin:0;font-weight:600" , textContent: str(a.hook_summary) }),
+        el("div", { className: "chips" },
+          a.video_format ? el("span", { className: "chip", textContent: str(a.video_format) }) : null,
+          arr(a.hook_types).map((t) => el("span", { className: "chip", textContent: str(t) })),
+          a.strength_score != null ? el("span", { className: "chip score", textContent: `Strength ${a.strength_score}/10` }) : null),
+        el("p", { className: "label", textContent: "Reusable template" }),
+        templateNode(a.structure_template),
+        el("dl", { className: "kv" }, arr(a.slots).map((s) => [
+          el("dt", { textContent: str(s.slot) }),
+          el("dd", { textContent: `${str(s.role)}. Original: “${str(s.original_value)}”` }),
+        ])),
+        el("p", { className: "label", textContent: "Psychological triggers" }),
+        el("dl", { className: "kv" }, arr(a.psychological_triggers).map((t) => [
+          el("dt", { textContent: str(t.trigger) }), el("dd", { textContent: str(t.how_it_is_used) }),
+        ])),
+        el("details", {},
+          el("summary", { textContent: "Elements, open loop and why it works" }),
+          el("dl", { className: "kv" },
+            Object.entries(a.elements || {}).map(([k, v]) => [el("dt", { textContent: k.replaceAll("_", " ") }), el("dd", { textContent: str(v) })]),
+            el("dt", { textContent: "open loop" }), el("dd", { textContent: str(a.open_loop) }),
+            el("dt", { textContent: "why it works" }), el("dd", { textContent: str(a.why_it_works) }),
+            el("dt", { textContent: "don't copy" }), el("dd", { textContent: str(a.do_not_copy) }))),
+      ),
+    );
+  }
+
+  function hookText(h) {
+    return [
+      `Say: ${str(h.spoken_line)}`,
+      `On-screen text: ${str(h.on_screen_text)}`,
+      `Opening shot: ${str(h.opening_visual)}`,
+      ...arr(h.shots).map((s) => `${str(s.t)}  ${str(s.shot)}`),
+      `Payoff: ${str(h.payoff)}`,
+    ].join("\n");
+  }
+
+  function hookCard(h, { savedId = null, isExample = false } = {}) {
+    const copyBtn = el("button", { type: "button", textContent: "Copy" });
+    copyBtn.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(hookText(h)); copyBtn.textContent = "Copied"; }
+      catch {
+        const sel = window.getSelection(); const range = document.createRange();
+        range.selectNodeContents(card); sel.removeAllRanges(); sel.addRange(range);
+        copyBtn.textContent = "Selected, copy it now";
+      }
+      setTimeout(() => (copyBtn.textContent = "Copy"), 1800);
+    });
+    const saveBtn = el("button", { type: "button", textContent: savedId ? "Remove" : "Save" });
+    saveBtn.addEventListener("click", async () => {
+      saveBtn.disabled = true;
+      try {
+        if (savedId) await removeSaved(savedId);
+        else { await addSaved(h); saveBtn.textContent = "Saved"; return; }
+      } catch { saveBtn.textContent = "Couldn't save, try again"; }
+      saveBtn.disabled = false;
+    });
+    const card = el("article", { className: "hook" },
+      el("div", { className: "hook-head" },
+        el("b", { textContent: str(h.title) }),
+        h.strength_score != null ? el("span", { className: "chip score", textContent: `${h.strength_score}/10` }) : null),
+      el("p", { className: "say", textContent: `“${str(h.spoken_line)}”` }),
+      h.on_screen_text ? el("span", { className: "ost", textContent: str(h.on_screen_text) }) : null,
+      el("p", { style: "margin:0" }, el("span", { className: "label", textContent: "Opening shot " }), " ", str(h.opening_visual)),
+      el("ol", { className: "shots" }, arr(h.shots).map((s) =>
+        el("li", {}, el("span", { className: "t", textContent: str(s.t) }), el("span", { textContent: str(s.shot) })))),
+      el("div", { className: "chips" }, arr(h.principles_borrowed).map((p) => el("span", { className: "chip", textContent: str(p) }))),
+      el("details", {},
+        el("summary", { textContent: "Template fill, payoff and reasoning" }),
+        el("dl", { className: "kv" },
+          arr(h.template_fill).map((f) => [el("dt", { textContent: str(f.slot) }), el("dd", { textContent: str(f.value) })]),
+          el("dt", { textContent: "payoff" }), el("dd", { textContent: str(h.payoff) }),
+          el("dt", { textContent: "why" }), el("dd", { textContent: str(h.why_it_should_work) }))),
+      el("div", { className: "row" }, copyBtn, isExample ? null : saveBtn),
+    );
+    return card;
+  }
+
+  function renderHooks(result, isExample) {
+    const kids = [];
+    if (isExample) kids.push(el("span", { className: "example-tag", textContent: "Example" }));
+    kids.push(...arr(result.hooks).map((h) => hookCard(h, { isExample })));
+    if (arr(result.filming_tips).length) {
+      kids.push(el("div", {},
+        el("p", { className: "label", textContent: "Filming tips" }),
+        el("ul", { style: "margin:6px 0 0;padding-left:20px" }, arr(result.filming_tips).map((t) => el("li", { textContent: str(t) })))));
+    }
+    $("hooks").replaceChildren(...kids);
+  }
+
+  // ---------- swipe file: per-person rows in db, localStorage when db is absent ----------
+  function renderSaved(list) {
+    if (!list.length) {
+      $("saved").replaceChildren(el("p", { className: "empty", textContent: "Nothing saved yet. Tap Save on a hook you like." }));
+      return;
+    }
+    $("saved").replaceChildren(...list.map(({ id, hook }) => hookCard(hook, { savedId: id })));
+  }
+  async function addSaved(h) {
+    if (savedCol) return savedCol.add({ hook: h, savedAt: Date.now() });
+    savedLocal = [{ id: "l" + Date.now(), hook: h }, ...savedLocal];
+    ls.set("hooklab.saved", savedLocal); renderSaved(savedLocal);
+  }
+  async function removeSaved(id) {
+    if (savedCol) return savedCol.doc(id).delete();
+    savedLocal = savedLocal.filter((s) => s.id !== id);
+    ls.set("hooklab.saved", savedLocal); renderSaved(savedLocal);
+  }
+
+  // ---------- Claude ----------
+  const errorCopy = {
+    not_granted: "Hook Lab needs your permission to use Claude. Reload the page and choose Allow.",
+    sampling_disabled: "Claude isn't available on this account.",
+    rate_limited: "You've hit a usage limit. Wait a few minutes and try again.",
+    session_expired: "Your Claude session expired. Sign in again, then retry.",
+    image_rejected: "One of the screenshots couldn't be read. Try a different image (JPG or PNG).",
+    images_unavailable: "Screenshots can't be sent from this app. Remove them and describe the opening in words.",
+    refused: "Claude declined this one. Rephrase the description and try again.",
+    invalid_json: "The answer came back in the wrong shape. Tap the button again.",
+    prompt_too_large: "That's too much text. Shorten the descriptions.",
+  };
+  const copyFor = (e) => errorCopy[e?.code] || "Something went wrong reaching Claude. Tap the button to try again.";
+
+  function originalText() {
+    const parts = [
+      ["Platform", $("platform").value],
+      ["Performance", $("performance").value],
+      ["Spoken words in the first seconds", $("spoken").value],
+      ["On-screen text", $("onscreen").value],
+      ["What is on screen / what happens", $("visual").value],
+    ].filter(([, v]) => v.trim());
+    return parts.map(([k, v]) => `${k}:\n${v.trim()}`).join("\n\n");
+  }
+
+  const ANALYSIS_SHAPE = `{
+  "hook_summary": "one sentence: what happens in the first 1-3 seconds",
+  "video_format": "e.g. talking head, POV, stunt, before/after, street interview",
+  "hook_types": ["named archetypes, e.g. Curiosity Gap, Contrarian, Negative Hook, Result-First, POV, Challenge, Secret Reveal, Mistake Callout, Price Contrast, Transformation"],
+  "psychological_triggers": [{"trigger": "e.g. loss aversion", "how_it_is_used": "..."}],
+  "elements": {"spoken": "...", "on_screen_text": "...", "visual": "...", "audio": "...", "pacing": "..."},
+  "structure_template": "the hook as a reusable fill-in-the-blank sentence with [SLOT_NAMES] in square brackets",
+  "slots": [{"slot": "SLOT_NAME without brackets", "role": "the job this slot does", "original_value": "what the original used"}],
+  "open_loop": "the question the viewer needs answered and when it is paid off",
+  "why_it_works": "...",
+  "strength_score": 8,
+  "do_not_copy": "wording, catchphrases or likeness specific to the original creator"
+}`;
+
+  const HOOKS_SHAPE = `{
+  "hooks": [{
+    "title": "short internal name",
+    "spoken_line": "exactly what to say in the first 3 seconds, under ~15 words",
+    "on_screen_text": "text overlay for the first frame",
+    "opening_visual": "what the camera shows in the first frame",
+    "shots": [{"t": "0:00", "shot": "..."}, {"t": "0:01", "shot": "..."}],
+    "template_fill": [{"slot": "SLOT_NAME", "value": "..."}],
+    "principles_borrowed": ["..."],
+    "payoff": "how the rest of the video keeps the hook's promise",
+    "why_it_should_work": "...",
+    "strength_score": 7
+  }],
+  "filming_tips": ["..."]
+}`;
+
+  $("analyzeBtn").addEventListener("click", async () => {
+    const status = $("analyzeStatus");
+    const text = originalText();
+    if (!$("spoken").value.trim() && !$("onscreen").value.trim() && !$("visual").value.trim() && !images.length) {
+      setStatus(status, "Describe the hook (what's said, the on-screen text or what you see), or add a screenshot.", "err");
+      return;
+    }
+    if (!sample) { setStatus(status, "Open this page in Claude to analyse hooks.", "err"); return; }
+    const btn = $("analyzeBtn");
+    btn.disabled = true;
+    setStatus(status, "Breaking down the hook. This usually takes 20–60 seconds.", "busy");
+    try {
+      const prompt =
+        "You are a short-form video strategist who reverse-engineers why viral hooks work on TikTok, Reels and Shorts. " +
+        "Break this hook into transferable principles: archetype, psychological triggers, spoken / on-screen / visual / audio elements, pacing, " +
+        "and a reusable fill-in-the-blank template. Be concrete and specific to the material; no generic padding. " +
+        "If information is thin, analyse what is there.\n\n" +
+        (images.length ? "The attached images are screenshots from the opening seconds of the video.\n\n" : "") +
+        "THE HOOK:\n" + (text || "(see screenshots)") +
+        "\n\nReply with only one JSON object in exactly this shape:\n" + ANALYSIS_SHAPE;
+      const result = await sample.json(prompt, images.length ? { images } : {});
+      if (!result || typeof result !== "object" || !result.structure_template) throw { code: "invalid_json" };
+      analysis = result;
+      renderAnalysis(analysis, false);
+      setStatus(status, "");
+      $("h-breakdown").scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (e) {
+      setStatus(status, copyFor(e), "err");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  $("generateBtn").addEventListener("click", async () => {
+    const status = $("generateStatus");
+    if (!analysis) { setStatus(status, "Analyse a viral hook first. The breakdown above is only an example.", "err"); return; }
+    if (!sample) { setStatus(status, "Open this page in Claude to write hooks.", "err"); return; }
+    const b = readBrand();
+    if (!b.name && !b.niche && !b.offer) { setStatus(status, "Fill in your brand details first.", "err"); $("brandDetails").open = true; return; }
+    const btn = $("generateBtn");
+    btn.disabled = true;
+    setStatus(status, "Writing your hooks. This usually takes 30–90 seconds.", "busy");
+    const brandText = [
+      ["Business", b.name], ["Niche", b.niche], ["Product or offer", b.offer], ["Audience", b.audience],
+      ["Location / market", b.location], ["Tone", b.tone], ["Goal of the video", b.goal], ["Platform", $("platform").value],
+    ].filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join("\n");
+    const feedback = $("feedback").value.trim();
+    try {
+      const prompt =
+        "You are a short-form video hook writer. Take the structure and psychology of a proven viral hook and apply it to a different business, " +
+        "so the new hooks earn attention for the same reasons without copying the original's wording, catchphrases or identity.\n\n" +
+        "Rules:\n- Keep the structure and triggers; change the words, subject and visuals to fit the brand.\n" +
+        "- Every hook must be filmable by a small business with a phone.\n" +
+        "- The hook must make a promise the video can honestly keep. No fake claims or prices.\n" +
+        "- Write spoken lines the way people actually talk. Short.\n" +
+        "- Make the hooks meaningfully different from each other (price, quality, story, mistake, transformation, local pride...).\n" +
+        "- Use the audience's local context (places, currency, everyday situations).\n" +
+        "- Shots use timecodes from 0:00 and cover about the first 5 seconds.\n\n" +
+        "VIRAL HOOK BREAKDOWN:\n" + JSON.stringify(analysis) +
+        "\n\nBUSINESS:\n" + brandText +
+        (feedback ? "\n\nFEEDBACK TO APPLY:\n" + feedback : "") +
+        `\n\nWrite ${$("count").value} hooks. Fill every template slot for each. Reply with only one JSON object in exactly this shape:\n` + HOOKS_SHAPE;
+      const result = await sample.json(prompt, { cache: false });
+      if (!result || !Array.isArray(result.hooks) || !result.hooks.length) throw { code: "invalid_json" };
+      renderHooks(result, false);
+      setStatus(status, "");
+      $("h-hooks").scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (e) {
+      setStatus(status, copyFor(e), "err");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // ---------- first paint: examples, then light up capabilities ----------
+  renderAnalysis(EXAMPLE_ANALYSIS, true);
+  renderHooks(EXAMPLE_HOOKS, true);
+  renderSaved(savedLocal);
+
+  const claudeApi = window.claude;
+  if (!claudeApi?.use) {
+    $("unavailable").hidden = false;
+    $("savedNote").textContent = "Hooks you save are kept in this browser.";
+    return;
+  }
+
+  claudeApi.use("sample").then(async (s) => {
+    sample = s;
+    if (!s) { $("unavailable").hidden = false; return; }
+    const caps = await s.limits().catch(() => null);
+    if (!caps?.images) $("screens").closest("label").hidden = true;
+  });
+
+  Promise.all([claudeApi.use("db"), claudeApi.use("user")]).then(async ([d, u]) => {
+    const id = u ? await u.id().catch(() => null) : null;
+    if (!d || !id) {
+      $("savedNote").textContent = "Hooks you save are kept in this browser.";
+      return;
+    }
+    db = d;
+    savedCol = db.collection("data/users/" + id + "/saved");
+    savedCol.orderBy("savedAt", "desc").onSnapshot(
+      (snap) => renderSaved(snap.docs.map((doc) => ({ id: doc.id, hook: doc.data()?.hook || {} }))),
+      () => { savedCol = null; $("savedNote").textContent = "Hooks you save are kept in this browser."; renderSaved(savedLocal); },
+    );
+  });
+})();
+</script>

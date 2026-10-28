@@ -56,3 +56,10 @@ npm test
 ```
 
 The tests run the server against a mocked Claude API, so they need no API key and cost nothing.
+
+## Hosted version (phone friendly)
+
+`hosted/hook-lab.html` is a single-page version published as a claude.ai artifact:
+<https://claude.ai/artifact/7P7Gq9dhFVAmZ8VtgQBdsC>
+
+It runs inside Claude, on the viewer's own Claude account, so it needs no server and no API key. On first use Claude asks you to allow the page to use Claude. Saved hooks are kept with your Claude account. Your brand details are remembered on each device.
