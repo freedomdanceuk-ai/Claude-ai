@@ -659,7 +659,15 @@ function removeMedia(id) {
   const m = media.get(id);
   if (!m) return;
   const used = state.clips.some((c) => c.mediaId === id) || state.music?.mediaId === id;
-  if (used && !confirm(`Remove “${m.name}” and everything on the timeline that uses it?`)) return;
+  // Two-tap confirmation (native confirm() dialogs are blocked in some embeds).
+  if (used && removeMedia.armed !== id) {
+    removeMedia.armed = id;
+    clearTimeout(removeMedia.timer);
+    removeMedia.timer = setTimeout(() => { removeMedia.armed = null; }, 4000);
+    toast(`Tap ✕ again to remove “${m.name}” and its clips`, 4000);
+    return;
+  }
+  removeMedia.armed = null;
   pause();
   state.clips = state.clips.filter((c) => c.mediaId !== id);
   if (state.music?.mediaId === id) state.music = null;
@@ -1224,6 +1232,7 @@ canvas.addEventListener('dblclick', () => { if (selectedText()) { const ta = $('
 const dlg = $('#export-dialog');
 let exportCancelled = false;
 let lastExportUrl = null;
+let lastExport = null;
 
 function supportedFormats() {
   if (!window.MediaRecorder) return [];
@@ -1347,9 +1356,7 @@ async function runExport() {
   if (ext === 'webm') blob = await fixWebmDuration(blob, T);
   if (lastExportUrl) URL.revokeObjectURL(lastExportUrl);
   lastExportUrl = URL.createObjectURL(blob);
-  const a = $('#exp-download');
-  a.href = lastExportUrl;
-  a.download = `cutline-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.${ext}`;
+  lastExport = { blob, name: `cutline-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.${ext}` };
   $('#exp-video').src = lastExportUrl;
   $('#exp-result').textContent = `${(blob.size / 1048576).toFixed(1)} MB · ${ext.toUpperCase()} · ${W}×${H}`;
   $('#exp-progress').hidden = true;
@@ -1362,7 +1369,31 @@ function cancelExport() {
   if (player.onEnded) { const f = player.onEnded; player.onEnded = null; f(); }
 }
 
+// Save the exported file. Inside a claude.ai artifact the page can't start a
+// download itself, so it asks the viewer through the `downloads` capability.
+async function saveExport() {
+  if (!lastExport) return;
+  const downloads = window.claude?.use ? await window.claude.use('downloads').catch(() => null) : null;
+  if (downloads) {
+    try {
+      await downloads.save({ filename: lastExport.name, data: lastExport.blob });
+      toast('Video saved');
+    } catch (e) {
+      if (e?.code === 'declined') return;
+      if (e?.code === 'rate_limited') toast('A save prompt is already open. Try again in a moment.');
+      else if (e?.code === 'too_large') toast('This video is too large to save here. Try “Small file” quality.', 5000);
+      else toast('Saving isn’t available in this view.', 4000);
+    }
+    return;
+  }
+  const a = h('a', { href: lastExportUrl, download: lastExport.name });
+  document.body.append(a);
+  a.click();
+  a.remove();
+}
+
 $('#btn-export').addEventListener('click', openExport);
+$('#exp-download').addEventListener('click', saveExport);
 $('#exp-start').addEventListener('click', runExport);
 $('#exp-cancel').addEventListener('click', cancelExport);
 $('#exp-close-1').addEventListener('click', () => dlg.close());
