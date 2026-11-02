@@ -1496,6 +1496,14 @@ window.addEventListener('keydown', (e) => {
 window.addEventListener('resize', () => renderTimeline());
 window.addEventListener('beforeunload', (e) => { if (state.clips.length) { e.preventDefault(); e.returnValue = ''; } });
 
+// In-app browsers (Google app, Facebook, Instagram, TikTok…) often have no file
+// picker at all. Make the hint prominent there.
+if (/\bGSA\/|FBAN|FBAV|Instagram|musical_ly|BytedanceWebview|Line\//i.test(navigator.userAgent)) {
+  const note = $('#inapp-note');
+  note.classList.add('warn');
+  note.textContent = 'You’re in an in-app browser that blocks file uploads. Tap ⋮ and choose “Open in Chrome” (or open the link in the Claude app), then tap Choose files.';
+}
+
 // Boot
 renderMedia();
 commit();
