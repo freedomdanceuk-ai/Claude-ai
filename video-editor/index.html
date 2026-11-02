@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cutline Video Editor</title>
+  <meta name="description" content="Edit videos in your browser: trim, split, reorder, filters, text, music and export. Nothing is uploaded.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="logo" aria-hidden="true">✂</span> Cutline</div>
+    <div class="top-actions">
+      <button id="btn-import" class="btn">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0-12-4 4m4-4 4 4M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>
+        <span>Import</span>
+      </button>
+      <input id="file-input" type="file" accept="video/*,audio/*,.mkv,.mov" multiple hidden>
+      <input id="music-input" type="file" accept="audio/*" hidden>
+      <button id="btn-undo" class="btn icon" title="Undo (Ctrl+Z)" aria-label="Undo">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3"/></svg>
+      </button>
+      <button id="btn-redo" class="btn icon" title="Redo (Ctrl+Shift+Z)" aria-label="Redo">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5m5 5H9a5 5 0 0 0 0 10h3"/></svg>
+      </button>
+      <button id="btn-export" class="btn primary">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3m0 12-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        <span>Export</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <aside class="panel media-panel">
+      <h2>Media</h2>
+      <div id="media-list" class="media-list"></div>
+      <p class="hint small">Drop video or audio files anywhere on the page. Files never leave your device.</p>
+    </aside>
+
+    <section class="preview-panel">
+      <div class="stage" id="stage">
+        <canvas id="preview" width="1280" height="720"></canvas>
+        <div class="empty" id="empty-state">
+          <div class="empty-icon" aria-hidden="true">🎬</div>
+          <p><strong>Drop videos here</strong> or</p>
+          <button class="btn primary" id="btn-import-2">Choose files</button>
+          <p class="hint small">MP4, WebM, MOV (browser-supported codecs)</p>
+        </div>
+      </div>
+      <div class="transport">
+        <button id="btn-start" class="btn icon ghost" title="Go to start (Home)" aria-label="Go to start">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14M18 6l-9 6 9 6z"/></svg>
+        </button>
+        <button id="btn-back" class="btn icon ghost" title="Back 1 frame (←)" aria-label="Back one frame">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
+        </button>
+        <button id="btn-play" class="btn play" title="Play / pause (Space)" aria-label="Play">
+          <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5v14l12-7z" fill="currentColor"/></svg>
+          <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14" stroke-width="3"/></svg>
+        </button>
+        <button id="btn-fwd" class="btn icon ghost" title="Forward 1 frame (→)" aria-label="Forward one frame">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+        </button>
+        <span id="time" class="time">0:00.00 / 0:00.00</span>
+      </div>
+    </section>
+
+    <aside class="panel inspector">
+      <nav class="tabs" role="tablist">
+        <button data-tab="clip" class="tab active" role="tab">Clip</button>
+        <button data-tab="text" class="tab" role="tab">Text</button>
+        <button data-tab="music" class="tab" role="tab">Music</button>
+        <button data-tab="project" class="tab" role="tab">Project</button>
+      </nav>
+      <div id="inspector-body" class="inspector-body"></div>
+    </aside>
+  </main>
+
+  <section class="timeline">
+    <div class="tl-toolbar">
+      <button id="tl-split" class="btn small" title="Split at playhead (S)">Split</button>
+      <button id="tl-delete" class="btn small" title="Delete selected (Del)">Delete</button>
+      <button id="tl-text" class="btn small" title="Add text at playhead (T)">+ Text</button>
+      <span class="spacer"></span>
+      <label class="zoom">Zoom <input id="tl-zoom" type="range" min="1" max="30" step="0.1" value="1"></label>
+    </div>
+    <div class="tl-body">
+      <div class="tl-labels">
+        <div class="lbl-ruler"></div>
+        <div class="lbl">Video</div>
+        <div class="lbl">Text</div>
+        <div class="lbl">Music</div>
+      </div>
+      <div class="tl-scroll" id="tl-scroll">
+        <div class="tl-inner" id="tl-inner">
+          <div class="ruler" id="ruler"></div>
+          <div class="track" id="track-video"></div>
+          <div class="track" id="track-text"></div>
+          <div class="track" id="track-music"></div>
+          <div class="playhead" id="playhead"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <dialog id="export-dialog">
+    <div class="dlg">
+      <h3>Export video</h3>
+      <div id="exp-setup">
+        <label class="ctl">Format <select id="exp-format"></select></label>
+        <label class="ctl">Quality
+          <select id="exp-quality">
+            <option value="0.22">High</option>
+            <option value="0.12" selected>Standard</option>
+            <option value="0.06">Small file</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="exp-mute" checked> Mute speakers while exporting</label>
+        <p class="hint" id="exp-info"></p>
+        <p class="hint small">Export renders in real time, so a 1-minute video takes about 1 minute. Keep this tab open and in front while it runs.</p>
+        <div class="dlg-actions">
+          <button class="btn" id="exp-close-1" type="button">Cancel</button>
+          <button class="btn primary" id="exp-start" type="button">Start export</button>
+        </div>
+      </div>
+      <div id="exp-progress" hidden>
+        <progress id="exp-bar" max="1" value="0"></progress>
+        <p id="exp-status" class="hint">Preparing…</p>
+        <div class="dlg-actions"><button class="btn" id="exp-cancel" type="button">Cancel export</button></div>
+      </div>
+      <div id="exp-done" hidden>
+        <video id="exp-video" controls playsinline></video>
+        <p id="exp-result" class="hint"></p>
+        <div class="dlg-actions">
+          <button class="btn" id="exp-close-2" type="button">Close</button>
+          <a class="btn primary" id="exp-download" download="video.mp4">Download</a>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <div id="media-host" aria-hidden="true"></div>
+  <div id="drop-overlay" aria-hidden="true"><div>Drop to import</div></div>
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
