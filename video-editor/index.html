@@ -11,12 +11,12 @@
   <header class="topbar">
     <div class="brand"><span class="logo" aria-hidden="true">✂</span> Cutline</div>
     <div class="top-actions">
-      <button id="btn-import" class="btn">
+      <label id="btn-import" class="btn" for="file-input" role="button" tabindex="0">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0-12-4 4m4-4 4 4M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>
         <span>Import</span>
-      </button>
-      <input id="file-input" type="file" accept="video/*,audio/*,.mkv,.mov" multiple hidden>
-      <input id="music-input" type="file" accept="audio/*" hidden>
+      </label>
+      <input id="file-input" class="visually-hidden" type="file" accept="video/*,audio/*,.mkv,.mov" multiple>
+      <input id="music-input" class="visually-hidden" type="file" accept="audio/*">
       <button id="btn-undo" class="btn icon" title="Undo (Ctrl+Z)" aria-label="Undo">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3"/></svg>
       </button>
@@ -43,7 +43,7 @@
         <div class="empty" id="empty-state">
           <div class="empty-icon" aria-hidden="true">🎬</div>
           <p><strong>Drop videos here</strong> or</p>
-          <button class="btn primary" id="btn-import-2">Choose files</button>
+          <label class="btn primary" id="btn-import-2" for="file-input" role="button" tabindex="0">Choose files</label>
           <p class="hint small">MP4, WebM, MOV (browser-supported codecs)</p>
         </div>
       </div>

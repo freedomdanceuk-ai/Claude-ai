@@ -208,3 +208,7 @@ body.dragging-files #drop-overlay { display: grid; }
   .zoom input { width: 90px; }
   .time { min-width: 0; }
 }
+
+/* File inputs stay in the layout (not display:none) so a <label for> tap opens the picker natively on phones. */
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; opacity: 0; }
+label.btn { user-select: none; -webkit-user-select: none; }

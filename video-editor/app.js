@@ -936,7 +936,7 @@ function musicPanel() {
   if (!mu) {
     out.push(
       h('p', { class: 'hint' }, 'Add a song or voice-over that plays under your video.'),
-      h('button', { class: 'btn primary block', type: 'button', onclick: () => $('#music-input').click() }, 'Choose audio file'),
+      h('label', { class: 'btn primary block', for: 'music-input', role: 'button', tabindex: '0' }, 'Choose audio file'),
     );
     if (audios.length) {
       out.push(section('Imported audio', ...audios.map((m) => h('div', { class: 'row' },
@@ -961,7 +961,7 @@ function musicPanel() {
         check({ label: 'Loop if the song is shorter than the video', checked: mu.loop, onChange: (v) => { mu.loop = v; } }),
       ),
       h('div', { class: 'row' },
-        btn('Replace…', () => $('#music-input').click()),
+        h('label', { class: 'btn small', for: 'music-input', role: 'button', tabindex: '0' }, 'Replace…'),
         btn('Remove music', () => { pause(); if (m) m.el.pause(); state.music = null; commit(); }, 'danger')),
     );
   }
@@ -1419,8 +1419,15 @@ function refresh() {
 }
 
 const fileInput = $('#file-input');
-$('#btn-import').addEventListener('click', () => fileInput.click());
-$('#btn-import-2').addEventListener('click', () => fileInput.click());
+// The import buttons are <label for="file-input">, so tapping them opens the
+// picker natively. Enter/Space support keeps them keyboard-accessible.
+for (const lab of document.querySelectorAll('label[role=button]')) {
+  lab.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); lab.click(); } });
+}
+document.addEventListener('keydown', (e) => {
+  const lab = e.target.closest?.('#inspector-body label[role=button]');
+  if (lab && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopPropagation(); lab.click(); }
+});
 fileInput.addEventListener('change', () => { importFiles(fileInput.files); fileInput.value = ''; });
 $('#music-input').addEventListener('change', async (e) => {
   const f = e.target.files[0];
