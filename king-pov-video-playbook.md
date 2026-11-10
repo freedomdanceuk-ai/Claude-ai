@@ -263,6 +263,27 @@ For every video from now on:
   fix weak spots first.
 - **Deliver posting copy with each video:** a title, a caption and 3-5 hashtags.
 
+## 7b. The edit the owner liked best (use as the template)
+
+Video 9 ("Why are you always with your friends???") was called the best edit.
+What it did:
+
+- King opens the video, in the same pose and setting as the source clip's
+  opening shot (seated on a wall with a red cup), with a clear change of
+  expression inside the 4 seconds.
+- POV text with one key word in yellow, placed away from his face, fading in.
+- The reveal clip cut out of its black frame, enlarged to full width on a
+  blurred copy of itself.
+- Red banner, plus the source's own caption redrawn in white with the key
+  words in yellow.
+- A `ME` label on the right person for the first two seconds.
+- A slow-motion replay of the punchline (half speed, 1.2x zoom, yellow
+  `REPLAY` tag) as the ending.
+- Posting copy delivered with the link.
+
+When a source clip is already a two-part meme, replace its first part with
+King and keep its wording.
+
 ## 8. Videos made so far
 
 | # | POV | Banner | King's outfit |
@@ -274,6 +295,8 @@ For every video from now on:
 | 5 | Me walking away after winning one argument with my wife | ME WALKING | Grey suit |
 | 6 | Me when my relatives hear I got paid | PAYDAY | Grey suit |
 | 7 | How I ended up in heaven | WHAT HAPPENED | Grey suit, in the clouds |
+| 8 | Why I was single for 10 years | THE REASON | Grey suit, on a bench |
+| 9 | Why are you always with your friends??? | THE REASON | Grey suit, on a wall with a red cup |
 
 Also made: two 10-second clips of King singing, copied from another creator's
 movements (one in a podcast-style studio, one in a music recording studio).
