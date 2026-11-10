@@ -64,6 +64,20 @@ Editing notes:
 - A label can follow a moving object (the balloon in the "payday" video) by
   tracking its colour frame by frame.
 
+## 3b. Who decides what
+
+The owner has asked for the creative decisions to be made for them from now on.
+
+- **Decide without asking:** the POV statement, banner words, labels, King's
+  outfit, setting and acting, the cut, zooms, speed changes and text placement.
+  Say what was chosen and why in one or two lines when delivering the video.
+- **Spend without asking:** the standard 4-second 720p hook (28 credits) for
+  each clip the owner uploads.
+- **Ask first:** anything that costs more than a standard hook (longer clips,
+  1080p, movement copy, a second take), and anything when the balance is too
+  low for it.
+- The owner can always override a choice; changes to text and cuts are free.
+
 ## 4. Costs seen so far (Higgsfield credits)
 
 | Item | Cost |
