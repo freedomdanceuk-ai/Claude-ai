@@ -165,6 +165,76 @@ do (music, sound effects, hearing dialogue), say so rather than pretend.
 > editing, and a viewer when reviewing. The goal is to make people stop
 > scrolling, keep watching, feel something and share the video.
 
+## 6b. Editing cheat sheet (supplied by the owner)
+
+Apply these 15 rules to every edit, alongside the brief above.
+
+> **MY VIRAL VIDEO EDITING CHEAT SHEET**
+>
+> 1. **Cut the boring parts.** Remove unnecessary pauses, repeated words, dead
+>    space and irrelevant footage.
+> 2. **Start with the best part.** Open with the most interesting statement,
+>    action or reaction. No unnecessary introductions.
+> 3. **Keep the video interesting.** Change camera angles, zoom levels and
+>    visuals to prevent boredom.
+> 4. **Highlight important words.** Use clear, animated captions. Make powerful
+>    words stand out.
+> 5. **Use silence.** Create suspense with short pauses. Don't fill every second
+>    with music.
+> 6. **Use sound effects.** Add appropriate sounds to emphasise actions,
+>    reactions and important moments.
+> 7. **Build curiosity.** Reveal information gradually. Give viewers a reason to
+>    keep watching.
+> 8. **Control the speed.** Speed up unnecessary sections. Slow down important
+>    or dramatic moments.
+> 9. **Show, don't just tell.** Use relevant images and footage to illustrate
+>    what is being discussed.
+> 10. **Keep transitions simple.** Avoid excessive transitions. Use clean cuts
+>     whenever possible.
+> 11. **Make it look professional.** Balance lighting, colours, contrast and
+>     sharpness. Keep skin tones natural.
+> 12. **Create an emotion.** Use music, pacing, expressions and visuals to make
+>     viewers feel something.
+> 13. **Make the ending strong.** Finish with a satisfying conclusion,
+>     unexpected twist, funny moment or memorable thought.
+> 14. **Make it sound-off friendly.** Include accurate, readable subtitles so
+>     viewers can understand without audio.
+> 15. **Remove everything unnecessary.** Every shot, sound, caption and effect
+>     must serve a purpose.
+>
+> **The three golden questions.** Before finalising the edit, ask:
+>
+> 1. Why should someone watch? Make the opening irresistible.
+> 2. Why should someone stay? Keep the video interesting throughout.
+> 3. Why should someone share? Give them something worth passing on.
+>
+> **Final editing instructions.** Vertical 9:16; 1080p or higher; clean,
+> cinematic and professional; large, readable, synchronised captions; clear
+> dialogue with balanced background music; engaging pacing that does not feel
+> rushed; professional but not excessive effects.
+>
+> **Golden rule:** don't edit to impress other editors. Edit to keep viewers
+> watching.
+
+How each rule maps to the tools:
+
+| Rule | How it is applied |
+|---|---|
+| 1, 15 Cut the boring / unnecessary | Trim lead-ins, tails, end screens and other creators' reactions |
+| 2 Start with the best part | Optional one-second flash of the punchline before King's hook |
+| 3 Keep it interesting | Punch-in zooms on the reveal; a different King shot size per video |
+| 4 Highlight words | The key word of the POV in a second colour; text pops in |
+| 5 Silence | The hook is silent already; a short freeze before the punchline |
+| 6 Sound effects | Simple effects can be synthesised in the sandbox; cannot be checked by ear |
+| 7 Curiosity | POV text first, reveal second; labels appear only when needed |
+| 8 Speed | Speed up slow walking or waiting; slow-motion replay of the punchline |
+| 9 Show, don't tell | The reveal clip is the "show"; labels say who is who |
+| 10 Simple transitions | Hard cuts only |
+| 11 Professional look | Light contrast and sharpness correction on dull clips; no heavy filters |
+| 12 Emotion | King's acting is matched to the POV |
+| 13 Strong ending | End on the punchline or the reaction to it, not after it |
+| 14 Sound-off friendly | POV text, banner and labels carry the joke without audio |
+
 ## 7. What the brief changes in practice
 
 For every video from now on:
