@@ -88,6 +88,9 @@ The owner has asked for the creative decisions to be made for them from now on.
 | Still image of King | 0.5 |
 | Movement copy (Genjutsu), 10 s at 480p / 720p | 30 / 70 |
 | Movement copy (Genjutsu), 25 s at 480p / 720p | 75 / 175 |
+| Movement copy (Genjutsu), 3 s or 3.5 s at 480p | 12 (billed as 4 s, the minimum) |
+| 4-second clip at 480p, with or without a reference video or draft mode | 12 |
+| Lip-sync clip (Seedance with an audio reference), 11 s at 480p | 33 |
 | Editing | free |
 
 The owner is cost-conscious. Always quote first, and suggest the cheaper test
