@@ -1,0 +1,19 @@
+# Render.com blueprint: hosts the flip bot dashboard with a small disk for its database.
+services:
+  - type: web
+    name: flipbot
+    runtime: docker
+    rootDir: flipbot
+    plan: starter
+    healthCheckPath: /health
+    disk:
+      name: flipbot-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: FLIPBOT_PASSWORD
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: FLASK_SECRET
+        generateValue: true

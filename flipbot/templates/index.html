@@ -49,7 +49,10 @@ pre.ad{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--bg);border:1
 <body><div class="wrap">
 <header>
   <h1>Flip <span>Bot</span></h1>
-  <form method="post" action="{{ url_for('scan') }}"><button class="primary">Scan for new listings</button></form>
+  <div class="row" style="margin:0">
+    <form method="post" action="{{ url_for('scan') }}"><button class="primary">Scan for new listings</button></form>
+    {% if has_password %}<form method="post" action="{{ url_for('logout') }}"><button>Log out</button></form>{% endif %}
+  </div>
 </header>
 
 {% for cat, msg in get_flashed_messages(with_categories=true) %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}

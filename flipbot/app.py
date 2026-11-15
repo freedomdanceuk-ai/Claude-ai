@@ -1,10 +1,13 @@
 """Flip bot dashboard.  Run:  python app.py   then open http://localhost:5000"""
+import hmac
 import json
+import os
+import secrets
 import threading
 import time
 import urllib.error
 
-from flask import Flask, flash, redirect, render_template, request, url_for
+from flask import Flask, flash, redirect, render_template, request, session, url_for
 
 import assess as assessor
 import config
@@ -12,8 +15,47 @@ import db
 import sources
 
 app = Flask(__name__)
-app.secret_key = "flipbot-local"
+app.secret_key = os.environ.get("FLASK_SECRET") or secrets.token_hex(32)
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=bool(os.environ.get("FLIPBOT_HOSTED")),
+    PERMANENT_SESSION_LIFETIME=60 * 60 * 24 * 30,
+)
 client = assessor.get_client()
+
+# When set, the dashboard asks for this password. Always set it when hosting online.
+PASSWORD = os.environ.get("FLIPBOT_PASSWORD", "")
+
+
+@app.before_request
+def require_login():
+    if not PASSWORD or session.get("ok") or request.endpoint in ("login", "static", "health"):
+        return None
+    return redirect(url_for("login"))
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        if PASSWORD and hmac.compare_digest(request.form.get("password", "").encode(), PASSWORD.encode()):
+            session.permanent = True
+            session["ok"] = True
+            return redirect(url_for("index"))
+        time.sleep(2)  # slow down password guessing
+        flash("Wrong password.", "error")
+    return render_template("login.html")
+
+
+@app.post("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+
+@app.get("/health")
+def health():
+    return "ok"
 
 
 def run_assessment(con, row):
@@ -45,7 +87,7 @@ def index():
         "sold": len(sold),
     }
     return render_template("index.html", deals=deals, status=status, counts=counts, stats=stats,
-                           statuses=db.STATUSES, ai_on=client is not None, total=len(everything))
+                           statuses=db.STATUSES, has_password=bool(PASSWORD), ai_on=client is not None, total=len(everything))
 
 
 def scan_once():
@@ -134,7 +176,12 @@ def update(lid):
     return redirect(request.referrer or url_for("index"))
 
 
-if __name__ == "__main__":
+def start_auto_scan():
     if config.SCAN_EVERY_MINUTES:
         threading.Thread(target=scan_forever, daemon=True).start()
-    app.run(host="0.0.0.0", port=5000, debug=False)
+
+
+if __name__ == "__main__":
+    start_auto_scan()
+    # Without a password, only this computer can open the dashboard.
+    app.run(host="0.0.0.0" if PASSWORD else "127.0.0.1", port=5000, debug=False)

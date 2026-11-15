@@ -47,3 +47,18 @@ category, how often to scan, and which Claude model to use.
 - The advert only states what the listing states. Check the item before you
   promise condition to a buyer.
 - A price far below market is more often a scam or stolen goods than a bargain.
+
+## Host it online (use it from your phone, anywhere)
+
+The repo includes a `Dockerfile` and a `render.yaml` for Render.com.
+
+1. Create an account at render.com and connect your GitHub.
+2. New → Blueprint → pick this repository. Render reads `render.yaml`.
+3. It asks for two values:
+   - `FLIPBOT_PASSWORD`: the password you will type on your phone. Make it long.
+   - `ANTHROPIC_API_KEY`: your Claude key.
+4. Deploy. Render gives you a link like `https://flipbot-xxxx.onrender.com`.
+   Open it on your phone and add it to your home screen.
+
+The blueprint uses a paid plan with a 1 GB disk so your deals are kept between
+restarts. The hosted bot refuses to start without a password.
