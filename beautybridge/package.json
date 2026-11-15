@@ -1,0 +1,21 @@
+{
+  "name": "beautybridge",
+  "version": "1.0.0",
+  "description": "China-to-US beauty product middleman store",
+  "main": "server.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.22.3"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  }
+}

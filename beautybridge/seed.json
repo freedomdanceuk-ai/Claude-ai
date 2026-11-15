@@ -1,0 +1,68 @@
+{
+  "products": [
+    {
+      "id": "p_serum_vc",
+      "name": "Vitamin C Brightening Serum 30ml",
+      "category": "Skincare",
+      "description": "Lightweight daily serum with vitamin C and hyaluronic acid for a brighter, more even-looking complexion.",
+      "supplierCost": 2.8, "shippingCost": 3.2, "supplierSku": "",
+      "cosmetic": true, "hue": 32, "active": true, "demandScore": 92
+    },
+    {
+      "id": "p_sheet_masks",
+      "name": "Hydrating Sheet Masks (10 pack)",
+      "category": "Skincare",
+      "description": "Ten single-use hyaluronic acid sheet masks for a quick moisture boost.",
+      "supplierCost": 3.1, "shippingCost": 3.6, "supplierSku": "",
+      "cosmetic": true, "hue": 195, "active": true, "demandScore": 85
+    },
+    {
+      "id": "p_gua_sha",
+      "name": "Rose Quartz Roller & Gua Sha Set",
+      "category": "Tools",
+      "description": "Dual-ended facial roller and gua sha stone in a gift box. A bestselling self-care gift.",
+      "supplierCost": 3.9, "shippingCost": 4.1, "supplierSku": "",
+      "cosmetic": false, "hue": 340, "active": true, "demandScore": 88
+    },
+    {
+      "id": "p_cleansing_brush",
+      "name": "Silicone Sonic Cleansing Brush",
+      "category": "Tools",
+      "description": "Waterproof, USB-rechargeable silicone face brush with 5 intensity levels.",
+      "supplierCost": 6.5, "shippingCost": 4.8, "supplierSku": "",
+      "cosmetic": false, "hue": 280, "active": true, "demandScore": 79
+    },
+    {
+      "id": "p_magnetic_lashes",
+      "name": "Magnetic Eyelash Kit (5 pairs)",
+      "category": "Makeup",
+      "description": "Reusable magnetic lashes with magnetic liner and applicator. No glue needed.",
+      "supplierCost": 2.4, "shippingCost": 3.0, "supplierSku": "",
+      "cosmetic": true, "hue": 0, "active": true, "demandScore": 90
+    },
+    {
+      "id": "p_brush_set",
+      "name": "Pro Makeup Brush Set (14 pcs)",
+      "category": "Makeup",
+      "description": "Soft synthetic brushes for foundation, powder, contour and eyes, with a travel pouch.",
+      "supplierCost": 4.2, "shippingCost": 4.4, "supplierSku": "",
+      "cosmetic": false, "hue": 20, "active": true, "demandScore": 76
+    },
+    {
+      "id": "p_heatless_curls",
+      "name": "Heatless Curling Rod Headband",
+      "category": "Hair",
+      "description": "Overnight satin curling rod with scrunchies for curls without heat damage.",
+      "supplierCost": 1.9, "shippingCost": 2.9, "supplierSku": "",
+      "cosmetic": false, "hue": 310, "active": true, "demandScore": 94
+    },
+    {
+      "id": "p_gel_kit",
+      "name": "Gel Nail Polish Kit with UV/LED Lamp",
+      "category": "Nails",
+      "description": "Starter kit with 6 gel colors, base and top coat, and a 48W UV/LED lamp.",
+      "supplierCost": 9.5, "shippingCost": 6.2, "supplierSku": "",
+      "cosmetic": true, "hue": 260, "active": true, "demandScore": 81
+    }
+  ]
+}

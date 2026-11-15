@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>BeautyBridge Admin</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .tabs { display: flex; gap: 8px; margin: 20px 0; flex-wrap: wrap; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 20px; }
+    .stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; }
+    .stat b { display: block; font-size: 24px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    .scroll { overflow-x: auto; }
+    .status { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: #f1ecea; white-space: nowrap; }
+    .status.paid { background: #fdecc8; color: var(--warn); }
+    .status.shipped, .status.delivered { background: #d9f2e6; color: var(--ok); }
+    .actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .actions input { width: 140px; padding: 6px 8px; }
+    .warn { color: var(--warn); font-size: 13px; }
+    .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  </style>
+</head>
+<body>
+  <header class="top"><div class="wrap"><a class="logo" href="/">Beauty<span>Bridge</span></a><nav><span class="muted">Admin</span><a href="#" id="logout">Log out</a></nav></div></header>
+  <main class="wrap" id="app"></main>
+  <script src="/admin.js"></script>
+</body>
+</html>
