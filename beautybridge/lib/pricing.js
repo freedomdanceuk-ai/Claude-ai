@@ -11,8 +11,8 @@ function config() {
   return {
     dutyRate: num(process.env.DUTY_RATE, 0.3), // fraction of product value
     targetMargin: num(process.env.TARGET_MARGIN, 0.3), // fraction of retail price
-    paymentPctFee: num(process.env.PAYMENT_PCT_FEE, 0.029),
-    paymentFixedFee: num(process.env.PAYMENT_FIXED_FEE, 0.3),
+    paymentPctFee: num(process.env.PAYMENT_PCT_FEE, 0.0349),
+    paymentFixedFee: num(process.env.PAYMENT_FIXED_FEE, 0.49),
   };
 }
 

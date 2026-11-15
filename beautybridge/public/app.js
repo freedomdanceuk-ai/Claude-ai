@@ -3,10 +3,12 @@ const $app = document.getElementById('app');
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const money = (n) => `$${Number(n).toFixed(2)}`;
 const ICONS = { Skincare: '🧴', Makeup: '💄', Tools: '🪞', Hair: '💇‍♀️', Nails: '💅' };
-const thumb = (p) => `<div class="thumb" style="background:linear-gradient(135deg,hsl(${p.hue} 70% 92%),hsl(${(p.hue + 40) % 360} 60% 82%))">${ICONS[p.category] || '✨'}</div>`;
+const thumb = (p) => /^https:\/\//.test(p.image || '')
+  ? `<div class="thumb"><img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy"></div>`
+  : `<div class="thumb" style="background:linear-gradient(135deg,hsl(${p.hue} 70% 92%),hsl(${(p.hue + 40) % 360} 60% 82%))">${ICONS[p.category] || '✨'}</div>`;
 const STATUS_LABEL = {
   pending_payment: 'Awaiting payment', paid: 'Payment received', ordered_from_supplier: 'Being prepared',
-  shipped: 'Shipped', delivered: 'Delivered', cancelled: 'Cancelled', refunded: 'Refunded',
+  shipped: 'Shipped', delivered: 'Delivered', cancelled: 'Cancelled', refunded: 'Refunded', needs_attention: 'Being prepared',
 };
 
 let config = { freeShippingOver: 35, shippingFee: 4.99, paymentsMode: 'demo', deliveryEstimate: '7–15 business days' };
@@ -81,7 +83,7 @@ function viewProduct(id) {
           <li>🚚 Ships to all 50 US states · ${esc(config.deliveryEstimate)}</li>
           <li>📦 Free shipping on orders over ${money(config.freeShippingOver)}</li>
           <li>↩️ 30-day refund if your item arrives damaged or doesn't arrive</li>
-          <li>🔒 Pay with card, Apple Pay, Google Pay or Cash App Pay</li>
+          <li>🔒 Pay with PayPal, Venmo, Pay Later or card</li>
         </ul>
       </div>
     </div>`;
@@ -159,12 +161,11 @@ function viewCheckout() {
           <label>ZIP<input name="zip" required pattern="\\d{5}(-\\d{4})?" autocomplete="postal-code"></label>
         </div>
         <p class="err" id="err"></p>
-        <button class="btn" id="pay">${config.paymentsMode === 'stripe' ? 'Continue to secure payment' : 'Place demo order'}</button>
-        <p class="muted" style="font-size:13px;margin:0">
-          ${config.paymentsMode === 'stripe'
-            ? 'You will pay on Stripe’s secure page: card, Apple Pay, Google Pay or Cash App Pay.'
-            : 'Demo mode: no payment is taken. Add a Stripe key to accept real payments.'}
-        </p>
+        ${config.paymentsMode === 'paypal'
+          ? `<div id="paypal-buttons"><p class="muted">Loading secure payment…</p></div>
+             <p class="muted" style="font-size:13px;margin:0">Pay with PayPal, Venmo, Pay Later or any debit/credit card. No PayPal account needed for cards.</p>`
+          : `<button class="btn" id="pay">Place demo order</button>
+             <p class="muted" style="font-size:13px;margin:0">Demo mode: no payment is taken. Add PayPal keys to accept real payments.</p>`}
       </form>
       <div class="panel">
         <strong>Order summary</strong>
@@ -174,23 +175,86 @@ function viewCheckout() {
         <p class="muted" style="font-size:13px">Import duties are included in our prices. No surprise fees at your door.</p>
       </div>
     </div>`;
-  document.getElementById('f').onsubmit = async (e) => {
+  const form = document.getElementById('f');
+  const errEl = document.getElementById('err');
+  const getCustomer = () => {
+    const c = Object.fromEntries(new FormData(form));
+    c.state = (c.state || '').trim().toUpperCase();
+    return c;
+  };
+  const startCheckout = () =>
+    api('/api/checkout', { method: 'POST', body: JSON.stringify({ items: cart.get(), customer: getCustomer() }) });
+  const done = (orderId) => {
+    cart.set([]);
+    location.hash = `#/order/${orderId}?email=${encodeURIComponent(getCustomer().email)}`;
+  };
+
+  if (config.paymentsMode === 'paypal') {
+    form.onsubmit = (e) => e.preventDefault();
+    renderPayPal({ form, errEl, startCheckout, done });
+    return;
+  }
+  form.onsubmit = async (e) => {
     e.preventDefault();
     const btn = document.getElementById('pay');
     btn.disabled = true;
-    const customer = Object.fromEntries(new FormData(e.target));
-    customer.state = customer.state.toUpperCase();
     try {
-      const r = await api('/api/checkout', { method: 'POST', body: JSON.stringify({ items: cart.get(), customer }) });
-      if (r.url) { location.href = r.url; return; }
-      await api(`/api/orders/${r.orderId}/demo-pay`, { method: 'POST', body: JSON.stringify({ email: customer.email }) });
-      cart.set([]);
-      location.hash = `#/order/${r.orderId}?email=${encodeURIComponent(customer.email)}`;
+      const r = await startCheckout();
+      await api(`/api/orders/${r.orderId}/demo-pay`, { method: 'POST', body: JSON.stringify({ email: getCustomer().email }) });
+      done(r.orderId);
     } catch (err) {
-      document.getElementById('err').textContent = err.message;
+      errEl.textContent = err.message;
       btn.disabled = false;
     }
   };
+}
+
+let paypalSdk;
+function loadPayPal() {
+  paypalSdk = paypalSdk || new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(config.paypalClientId)}` +
+      '&currency=USD&intent=capture&components=buttons&enable-funding=venmo,paylater';
+    s.onload = () => resolve(window.paypal);
+    s.onerror = () => { paypalSdk = null; reject(new Error('Could not load PayPal. Check your connection and refresh.')); };
+    document.head.appendChild(s);
+  });
+  return paypalSdk;
+}
+
+async function renderPayPal({ form, errEl, startCheckout, done }) {
+  const box = document.getElementById('paypal-buttons');
+  let orderId;
+  try {
+    const pp = await loadPayPal();
+    box.innerHTML = '';
+    await pp.Buttons({
+      style: { layout: 'vertical', shape: 'rect', label: 'pay' },
+      // Make sure the address is filled in before PayPal opens.
+      onClick: (_d, actions) => {
+        errEl.textContent = '';
+        if (!form.reportValidity()) return actions.reject();
+        return actions.resolve();
+      },
+      createOrder: async () => {
+        try {
+          const r = await startCheckout();
+          orderId = r.orderId;
+          return r.paypalOrderId;
+        } catch (e) { errEl.textContent = e.message; throw e; }
+      },
+      onApprove: async () => {
+        try {
+          await api('/api/paypal/capture', { method: 'POST', body: JSON.stringify({ orderId }) });
+          done(orderId);
+        } catch (e) { errEl.textContent = e.message; }
+      },
+      onCancel: () => { errEl.textContent = 'Payment cancelled. You have not been charged.'; },
+      onError: () => { if (!errEl.textContent) errEl.textContent = 'Payment could not be completed. Please try again.'; },
+    }).render(box);
+  } catch (e) {
+    box.innerHTML = `<p class="err">${esc(e.message)}</p>`;
+  }
 }
 
 async function viewOrder(id, email) {

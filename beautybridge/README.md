@@ -1,65 +1,86 @@
 # BeautyBridge
 
-A middleman store: find beauty products US shoppers want, sell them at a price
-that already includes shipping and import duty, buy them from a China supplier
-when an order comes in, and track delivery to the customer.
+An automated middleman store. It finds beauty products US shoppers want, sells them
+at a price that already covers shipping and import duty, takes payment with PayPal,
+orders from the China supplier (CJdropshipping), and emails tracking and delivery
+updates to the customer, all without anyone touching it.
 
 ## Run it
 
 ```bash
 cd beautybridge
 npm install
+cp .env.example .env     # fill in your keys (or leave blank for demo mode)
 ADMIN_TOKEN=pick-a-secret npm start
 ```
 
 - Store: http://localhost:3000
-- Admin: http://localhost:3000/admin (log in with your `ADMIN_TOKEN`)
+- Admin: http://localhost:3000/admin
 
-With no keys set it runs in **demo mode**: no real payments are taken and supplier orders are mocked.
-See `.env.example` for all settings.
+With no keys it runs fully in **demo mode**. Payment is simulated, a mock supplier
+"ships" the order after 2 minutes and "delivers" it after 5, and emails go to
+`data/outbox.log`. You can watch the whole automatic flow without spending money.
 
-## How an order flows
+## What happens automatically
 
-1. Customer orders. Prices come from the server, and duty and shipping are already included.
-2. Customer pays through **Stripe Checkout**: card, Apple Pay, Google Pay, Cash App Pay.
-   The Stripe webhook marks the order **paid**.
-3. Admin clicks **Send to supplier**. With `CJ_API_KEY` set, this places the order on
-   CJdropshipping, shipped straight to the customer. Without the key, you order by hand.
-4. Admin enters the tracking number and marks the order **shipped**, later **delivered**.
-5. Customer tracks the order at `/#/track` using the order number and email.
+| When | What the app does |
+|---|---|
+| Customer pays (PayPal, Venmo, Pay Later or card) | Captures payment, emails a confirmation, orders the product from CJ to ship to the customer, and pays CJ from your CJ wallet |
+| Supplier order fails | Retries 5 times over about 4 hours, then refunds the customer through PayPal and emails both of you |
+| Supplier ships | Saves the tracking number and emails the customer a tracking link |
+| Package delivered | Marks the order delivered and emails the customer |
+| Supplier cancels | Refunds the customer automatically |
+| Every day | Finds popular beauty products on CJ, works out duty + shipping + margin, lists the profitable ones, updates costs and hides sold-out items |
+| Every hour | Customer requests with 3+ votes are found on CJ, listed, and the requester is emailed |
 
-## Finding products people want
+The **Automation** tab in the admin panel shows every job, its last result, and a "Run now" button.
 
-- **Request a product** page (`/#/request`): shoppers ask for products and upvote each other's requests.
-  Admin → Requests ranks them by votes. Source the top ones.
-- `demandScore` on each product sets its order in the shop. Set it from TikTok Shop / Amazon
-  bestseller research or supplier "trending" lists.
-- Admin → Products has a **landed-cost calculator**: enter the supplier cost and shipping
-  to get the duty, landed cost, retail price and profit.
+### What still needs you (on purpose)
 
-## Going live with Stripe
+- **Cosmetics review.** Anything applied to skin, hair or nails (serums, masks, lash glue, gel polish)
+  is a cosmetic under US law. The FDA requires the maker to have a registered facility, a product
+  listing and English ingredient labels. These products wait in Admin → Products until you click
+  **Approve**. Tools and accessories (gua sha, brushes, clips) go live with no review.
+  You can set `REVIEW_COSMETICS=false` to skip this, but selling a non-compliant cosmetic is
+  your legal risk.
+- **Blocked products.** The app never lists skin whitening/bleaching products, teeth whitening,
+  growth serums, needles, LED masks or anything with medical claims. These are regulated as drugs
+  or devices in the US.
+- **Top up your CJ wallet.** Supplier orders are paid from that balance. If it runs dry,
+  orders fail, and after retries the customer is refunded.
 
-1. Set `STRIPE_SECRET_KEY` and `BASE_URL` (your public https URL).
-2. In the Stripe Dashboard, add a webhook to `https://YOUR-DOMAIN/api/stripe/webhook` for
-   `checkout.session.completed`, and put its signing secret in `STRIPE_WEBHOOK_SECRET`.
-3. Turn on Apple Pay, Google Pay and Cash App Pay under Settings → Payment methods.
+## Setup for real money
 
-## Before you sell for real (US rules)
+1. **PayPal Business account.** At developer.paypal.com create an app, then set `PAYPAL_CLIENT_ID`
+   and `PAYPAL_CLIENT_SECRET`. Test with `PAYPAL_ENV=sandbox` first, then switch to `live`.
+2. **PayPal webhook.** Add `https://YOUR-DOMAIN/api/paypal/webhook` with the events
+   `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.REFUNDED` and `PAYMENT.CAPTURE.REVERSED`.
+   Put its ID in `PAYPAL_WEBHOOK_ID`. This catches payments even if a buyer closes the tab.
+3. **CJdropshipping.** Create an account, generate an API key, set `CJ_API_KEY`, and add funds to the wallet.
+   ⚠️ The CJ endpoint paths are listed in one place, `ENDPOINTS` in `lib/supplier.js`.
+   Check them against CJ's current API docs before going live.
+4. **Email.** Create a Resend account, verify your domain, then set `RESEND_API_KEY` and `EMAIL_FROM`.
+5. **Hosting.** Any Node host with a persistent disk works: Render, Railway or Fly.io.
+   It must stay running so the background jobs run. Set `BASE_URL` to your https address.
 
-- **Import duty:** The US ended duty-free "de minimis" entry for Chinese goods in 2025.
-  Every parcel owes duty, and tariff rates on Chinese goods change often.
-  Get your rate from your carrier or a customs broker and set `DUTY_RATE`.
-- **Cosmetics (FDA / MoCRA):** Products applied to the body (serums, masks, lash glue,
-  nail gel) must come from an FDA-registered facility, carry a product listing, and have
-  English ingredient labelling. Check this with each supplier. Products flagged
-  `cosmetic` are marked in the admin panel.
-- **Business:** Form an LLC, get an EIN, and add a refund policy, terms and a privacy policy.
-  Collect state sales tax where you pass the thresholds (Stripe Tax can do this).
-- Order product samples before you list anything.
+## Before you sell (US rules)
 
-## Production notes
+- **Import duty.** The US ended duty-free entry for Chinese parcels in 2025, so every parcel owes duty.
+  Tariff rates on Chinese goods change often. Get yours from a customs broker and set `DUTY_RATE`.
+- **Business.** Form an LLC, get an EIN, publish refund, terms and privacy pages, and collect
+  sales tax in states where you pass the thresholds.
+- Order samples of the auto-listed products before advertising them.
 
-- Data is stored in `data/db.json`. Move to Postgres before you have real volume.
-- Put it behind HTTPS (Render, Railway and Fly.io all work) and set a long `ADMIN_TOKEN`.
-- Order confirmation and shipping emails are not built yet. The next step is to add
-  Resend or Postmark.
+## Project layout
+
+```
+server.js            web server + API
+lib/automation.js    background jobs (fulfil, tracking, discover, requests)
+lib/paypal.js        PayPal Orders v2: create, capture, refund, webhook verification
+lib/supplier.js      CJdropshipping API + mock supplier
+lib/email.js         customer + admin emails (Resend)
+lib/pricing.js       landed-cost pricing (duty + shipping + fees + margin)
+public/              storefront + admin dashboard
+```
+
+Data is stored in `data/db.json`. Move to Postgres once you have steady order volume.
