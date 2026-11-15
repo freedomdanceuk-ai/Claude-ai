@@ -54,6 +54,8 @@ function requireAdmin(req, res, next) {
 }
 
 // ---------- public API ----------
+app.get('/healthz', (req, res) => res.json({ ok: true }));
+
 app.get('/api/config', (req, res) => {
   res.json({
     paymentsMode: paypal.enabled() ? 'paypal' : 'demo',

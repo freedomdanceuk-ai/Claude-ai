@@ -1,0 +1,48 @@
+# Render Blueprint for BeautyBridge (https://render.com/docs/blueprint-spec)
+# Render → New → Blueprint → pick this repo. Fill in the secret values when asked.
+services:
+  - type: web
+    name: beautybridge
+    runtime: node
+    branch: ccr-1241216e-bcrg3q
+    rootDir: beautybridge
+    # Starter (not Free): free instances sleep when idle, which stops the
+    # automation jobs, and can't keep a disk, so orders would be lost.
+    plan: starter
+    region: oregon
+    buildCommand: npm ci --omit=dev
+    startCommand: node server.js
+    healthCheckPath: /healthz
+    disk:
+      name: beautybridge-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATA_DIR
+        value: /var/data
+      - key: ADMIN_TOKEN
+        generateValue: true          # find it in the Render dashboard → Environment
+      - key: BASE_URL
+        sync: false                  # e.g. https://beautybridge.onrender.com
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: PAYPAL_ENV
+        value: sandbox               # change to "live" when you're ready for real money
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false
+      - key: CJ_API_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: DUTY_RATE
+        value: "0.30"
+      - key: TARGET_MARGIN
+        value: "0.30"

@@ -60,8 +60,23 @@ The **Automation** tab in the admin panel shows every job, its last result, and 
    ⚠️ The CJ endpoint paths are listed in one place, `ENDPOINTS` in `lib/supplier.js`.
    Check them against CJ's current API docs before going live.
 4. **Email.** Create a Resend account, verify your domain, then set `RESEND_API_KEY` and `EMAIL_FROM`.
-5. **Hosting.** Any Node host with a persistent disk works: Render, Railway or Fly.io.
-   It must stay running so the background jobs run. Set `BASE_URL` to your https address.
+5. **Hosting.** See "Deploy to Render" below.
+
+## Deploy to Render
+
+The repo has a `render.yaml` blueprint at the root.
+
+1. Sign up at render.com with your GitHub account, and give Render access to this repository.
+2. Click **New → Blueprint**, pick this repository, and click **Apply**.
+3. Render asks for the secret values. Leave any you don't have yet blank: the app runs in
+   demo mode until they're filled in. Set `BASE_URL` to the address Render gives you
+   (e.g. `https://beautybridge.onrender.com`) after the first deploy, then redeploy.
+4. Find your admin password: Dashboard → beautybridge → Environment → `ADMIN_TOKEN`.
+
+It uses the **Starter** plan (about $7/month plus $0.25/month for the 1 GB disk). The free plan
+is not suitable: it sleeps when idle, which stops the automation, and it has no disk, so orders would be lost.
+
+For other hosts (Railway, Fly.io, a VPS), use the `Dockerfile` and mount a persistent volume at `/var/data`.
 
 ## Before you sell (US rules)
 
