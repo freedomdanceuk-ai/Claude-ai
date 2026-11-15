@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flip Bot</title>
+<style>
+:root{--bg:#f4f1ea;--card:#fff;--ink:#1c1b18;--mute:#6b675e;--line:#e2ddd1;--gold:#b8860b;--good:#1f7a4a;--bad:#a8322a;--warn:#9a6a00;--chip:#efe9dc}
+@media (prefers-color-scheme:dark){:root{--bg:#151412;--card:#1f1e1b;--ink:#f1ede4;--mute:#a39e92;--line:#34322d;--gold:#e0b03c;--good:#5fcf94;--bad:#f0837a;--warn:#e6b450;--chip:#2a2824}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}
+h1{font-size:22px;margin:0;letter-spacing:-.01em}h1 span{color:var(--gold)}
+button,.btn{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer}
+button.primary{background:var(--gold);border-color:var(--gold);color:#fff;font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat b{display:block;font-size:22px;font-variant-numeric:tabular-nums}.stat small{color:var(--mute)}
+.flash{padding:10px 14px;border-radius:8px;margin-bottom:12px;border:1px solid var(--line);background:var(--card)}
+.flash.error{border-color:var(--bad);color:var(--bad)}.flash.ok{border-color:var(--good)}
+.note{background:var(--chip);border-radius:8px;padding:10px 14px;margin-bottom:12px;color:var(--mute);font-size:14px}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;padding-bottom:4px}
+.tabs a{white-space:nowrap;text-decoration:none;color:var(--mute);padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card)}
+.tabs a.on{color:var(--ink);border-color:var(--gold);font-weight:600}
+details.add{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:16px}
+details.add summary{cursor:pointer;font-weight:600}
+input,textarea,select{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+textarea{min-height:90px;resize:vertical}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin:8px 0}
+.deal{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.deal.flip{border-left:4px solid var(--good)}.deal.skip{opacity:.8}
+.top{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:baseline}
+.top h2{font-size:17px;margin:0;overflow-wrap:anywhere}
+.chip{display:inline-block;font-size:12px;padding:2px 8px;border-radius:999px;background:var(--chip);color:var(--mute)}
+.chip.flip{background:var(--good);color:#fff}.chip.skip{background:var(--bad);color:#fff}.chip.needs_info{background:var(--warn);color:#fff}
+.nums{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin:12px 0}
+.nums div{background:var(--bg);border-radius:8px;padding:8px 10px}
+.nums small{display:block;color:var(--mute);font-size:12px}.nums b{font-size:17px;font-variant-numeric:tabular-nums}
+.profit{color:var(--good)}.loss{color:var(--bad)}
+.risk{color:var(--bad);margin:6px 0;padding-left:18px}.ask{color:var(--mute);margin:6px 0;padding-left:18px}
+pre.ad{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--bg);border:1px dashed var(--line);border-radius:8px;padding:10px;font:inherit;margin:8px 0}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.row input,.row select{width:auto;flex:1 1 110px}
+.meta{color:var(--mute);font-size:13px}.meta a{color:var(--gold)}
+.empty{text-align:center;color:var(--mute);padding:40px 16px}
+</style>
+</head>
+<body><div class="wrap">
+<header>
+  <h1>Flip <span>Bot</span></h1>
+  <form method="post" action="{{ url_for('scan') }}"><button class="primary">Scan for new listings</button></form>
+</header>
+
+{% for cat, msg in get_flashed_messages(with_categories=true) %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}
+{% if not ai_on %}<div class="note">No Claude API key is set, so prices use a flat markup rule and no market valuation. Set <code>ANTHROPIC_API_KEY</code> and restart for real assessments.</div>{% endif %}
+
+<div class="stats">
+  <div class="stat"><small>Flips waiting</small><b>{{ stats.waiting }}</b></div>
+  <div class="stat"><small>Advertised / buyer found</small><b>{{ counts.advertised + counts.buyer_found }}</b></div>
+  <div class="stat"><small>Estimated profit in pipeline</small><b>{{ stats.open_profit|money }}</b></div>
+  <div class="stat"><small>Actual profit ({{ stats.sold }} sold)</small><b>{{ stats.realised|money }}</b></div>
+</div>
+
+<details class="add" {% if total == 0 %}open{% endif %}>
+  <summary>Add a listing from anywhere (Facebook, WhatsApp group, newspaper)</summary>
+  <form method="post" action="{{ url_for('add') }}">
+    <div class="grid">
+      <input name="title" placeholder="Item, e.g. Samsung A54 128GB">
+      <input name="price" type="number" step="any" min="0" placeholder="Asking price USD">
+      <input name="location" placeholder="Location, e.g. Harare">
+      <input name="source" placeholder="Where you saw it">
+    </div>
+    <input name="url" type="url" placeholder="Link to the listing (optional)">
+    <textarea name="text" placeholder="Paste the full listing text here" style="margin-top:8px"></textarea>
+    <div class="row"><button class="primary">Assess this listing</button></div>
+  </form>
+</details>
+
+<nav class="tabs">
+  {% for s in statuses %}<a href="?status={{ s }}" class="{{ 'on' if status == s }}">{{ s.replace('_',' ')|capitalize }} ({{ counts[s] }})</a>{% endfor %}
+  <a href="?status=all" class="{{ 'on' if status == 'all' }}">All ({{ total }})</a>
+</nav>
+
+{% for d in deals %}
+<article class="deal {{ d.verdict }}">
+  <div class="top">
+    <h2>{{ d.title }}</h2>
+    <span><span class="chip {{ d.verdict }}">{{ d.verdict.replace('_',' ')|upper }}</span>
+    <span class="chip">{{ d.category }}</span>
+    {% if d.a.confidence %}<span class="chip">{{ d.a.confidence }} confidence</span>{% endif %}</span>
+  </div>
+  <div class="meta">{{ d.source }}{% if d.location %} · {{ d.location }}{% endif %}
+    {% if d.url %} · <a href="{{ d.url }}" target="_blank" rel="noopener">open original listing</a>{% endif %}
+    {% if d.assessed_by == 'rules' %} · flat-rule price, not a valuation{% endif %}</div>
+
+  <div class="nums">
+    <div><small>Seller asks</small><b>{{ d.ask_price|money }}</b></div>
+    <div><small>Market range</small><b>{% if d.a.market_low_usd %}{{ d.a.market_low_usd|money }}–{{ d.a.market_high_usd|money }}{% else %}—{% endif %}</b></div>
+    <div><small>Advertise at</small><b>{{ d.resale_price|money }}</b></div>
+    <div><small>Markup</small><b>{% if d.a.markup_pct is not none and d.a.markup_pct is defined %}{{ d.a.markup_pct }}%{% else %}—{% endif %}</b></div>
+    <div><small>Profit after costs</small><b class="{{ 'profit' if (d.est_profit or 0) > 0 else 'loss' }}">{{ d.est_profit|money }}</b></div>
+  </div>
+
+  {% if d.a.reasoning %}<p>{{ d.a.reasoning }}</p>{% endif %}
+  {% if d.a.risk_flags %}<ul class="risk">{% for r in d.a.risk_flags %}<li>{{ r }}</li>{% endfor %}</ul>{% endif %}
+  {% if d.a.questions_for_seller %}<div class="meta">Confirm with the seller first:</div><ul class="ask">{% for q in d.a.questions_for_seller %}<li>{{ q }}</li>{% endfor %}</ul>{% endif %}
+
+  {% if d.a.advert_text %}
+  <pre class="ad" id="ad{{ d.id }}">{{ d.a.advert_text }}</pre>
+  <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('ad{{ d.id }}').textContent).then(()=>{this.textContent='Copied'})">Copy advert</button>
+  {% endif %}
+
+  {% if d.verdict == 'needs_info' %}
+  <form class="row" method="post" action="{{ url_for('update', lid=d.id) }}">
+    <input name="ask_price" type="number" step="any" min="0" placeholder="Asking price USD">
+    <input name="extra_text" placeholder="Paste details from the listing" style="flex:3 1 220px">
+    <button>Assess</button>
+  </form>
+  {% endif %}
+
+  <form class="row" method="post" action="{{ url_for('update', lid=d.id) }}">
+    <select name="status" aria-label="Status">{% for s in statuses %}<option value="{{ s }}" {{ 'selected' if d.status == s }}>{{ s.replace('_',' ')|capitalize }}</option>{% endfor %}</select>
+    <input name="paid_price" type="number" step="any" min="0" placeholder="Paid USD" value="{{ d.paid_price or '' }}">
+    <input name="sold_price" type="number" step="any" min="0" placeholder="Sold USD" value="{{ d.sold_price or '' }}">
+    <input name="notes" placeholder="Notes (seller number, buyer name)" value="{{ d.notes }}" style="flex:3 1 200px">
+    <button>Save</button>
+  </form>
+</article>
+{% else %}
+<div class="empty">Nothing here yet. Press “Scan for new listings” or add one above.</div>
+{% endfor %}
+</div></body></html>
